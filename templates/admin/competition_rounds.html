@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-list-ol"></i> Rounds - {{ competition.name }}
+                </h3>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoundModal">
+                    <i class="fas fa-plus"></i> Add Round
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% if competition.rounds %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Round Type</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for round in competition.rounds %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">{{ round.round_type }}</span>
+                                </td>
+                                <td>
+                                    {% if round.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif round.status == 'active' %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Completed</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ round.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('manage_round_pairings', competition_id=competition.id, round_id=round.id) }}" 
+                                           class="btn btn-sm btn-info">
+                                            <i class="fas fa-users"></i> Pairings
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-warning" 
+                                                onclick="editRound({{ round.id }}, '{{ round.round_type }}', '{{ round.status }}')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <form method="POST" action="{{ url_for('delete_round', competition_id=competition.id, round_id=round.id) }}" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Are you sure you want to delete this round?');">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No rounds created for this competition yet.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Round Modal -->
+<div class="modal fade" id="addRoundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Round</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_round', competition_id=competition.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="round_type" class="form-label">Round Type</label>
+                        <select class="form-select" id="round_type" name="round_type" required>
+                            <option value="preliminary">Preliminary</option>
+                            <option value="semifinal">Semifinal</option>
+                            <option value="final">Final</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="pending">Pending</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Round</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Round Modal -->
+<div class="modal fade" id="editRoundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Round</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editRoundForm" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_round_type" class="form-label">Round Type</label>
+                        <select class="form-select" id="edit_round_type" name="round_type" required>
+                            <option value="preliminary">Preliminary</option>
+                            <option value="semifinal">Semifinal</option>
+                            <option value="final">Final</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_status" class="form-label">Status</label>
+                        <select class="form-select" id="edit_status" name="status" required>
+                            <option value="pending">Pending</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editRound(roundId, roundType, status) {
+    const form = document.getElementById('editRoundForm');
+    form.action = `/admin/competitions/{{ competition.id }}/rounds/${roundId}/edit`;
+    
+    document.getElementById('edit_round_type').value = roundType;
+    document.getElementById('edit_status').value = status;
+    
+    new bootstrap.Modal(document.getElementById('editRoundModal')).show();
+}
+</script>
+{% endblock %}

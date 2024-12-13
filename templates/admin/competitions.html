@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Manage Competitions</h2>
+    
+    <!-- Add Competition Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Add New Competition</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Competition Name</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="date" name="date" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Competition</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- List of Competitions -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Existing Competitions</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Registration</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for competition in competitions %}
+                        <tr>
+                            <td>{{ competition.name }}</td>
+                            <td>{{ competition.date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ competition.status }}</td>
+                            <td>{{ 'Open' if competition.registration_open else 'Closed' }}</td>
+                            <td>
+                                <a href="{{ url_for('manage_competition_dancers', competition_id=competition.id) }}" 
+                                   class="btn btn-sm btn-primary">Manage Dancers</a>
+                                <a href="{{ url_for('manage_competition_judges', competition_id=competition.id) }}" 
+                                   class="btn btn-sm btn-info">Manage Judges</a>
+                                <a href="{{ url_for('view_results', competition_id=competition.id) }}" 
+                                   class="btn btn-sm btn-secondary">View Results</a>
+                                {% if competition.registration_open %}
+                                <form method="POST" action="{{ url_for('toggle_registration', competition_id=competition.id) }}" 
+                                      style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-warning">Close Registration</button>
+                                </form>
+                                {% else %}
+                                <form method="POST" action="{{ url_for('toggle_registration', competition_id=competition.id) }}" 
+                                      style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-success">Open Registration</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if not competitions %}
+            <div class="alert alert-info">No competitions found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Score Dance Pair</h2>
+    
+    <div class="card scoring-form">
+        <div class="card-header">
+            <h3>Scoring Form</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="scoring-form-{{ pairing.id }}">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Leader:</strong> {{ pairing.leader.name }}</p>
+                        <p><strong>Follower:</strong> {{ pairing.follower.name }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="timing" class="form-label">Timing (1-10)</label>
+                        <input type="number" class="form-control score-input" id="timing" name="timing" 
+                               min="1" max="10" step="0.5" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="technique" class="form-label">Technique (1-10)</label>
+                        <input type="number" class="form-control score-input" id="technique" name="technique" 
+                               min="1" max="10" step="0.5" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="connection" class="form-label">Connection (1-10)</label>
+                        <input type="number" class="form-control score-input" id="connection" name="connection" 
+                               min="1" max="10" step="0.5" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="musicality" class="form-label">Musicality (1-10)</label>
+                        <input type="number" class="form-control score-input" id="musicality" name="musicality" 
+                               min="1" max="10" step="0.5" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="presentation" class="form-label">Presentation (1-10)</label>
+                        <input type="number" class="form-control score-input" id="presentation" name="presentation" 
+                               min="1" max="10" step="0.5" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit Scores</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

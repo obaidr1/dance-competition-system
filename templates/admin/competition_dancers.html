@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-users"></i> Dancers in {{ competition.name }}
+                </h3>
+                <div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDancerModal">
+                        <i class="fas fa-user-plus"></i> Add Dancer
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% if competition.dancers %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Level</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dancer in competition.dancers %}
+                            <tr>
+                                <td>{{ dancer.first_name }} {{ dancer.last_name }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ dancer.level }}</span>
+                                </td>
+                                <td>{{ dancer.user.email }}</td>
+                                <td>{{ dancer.phone or 'N/A' }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('remove_dancer_from_competition', competition_id=competition.id, dancer_id=dancer.id) }}" 
+                                          style="display: inline;"
+                                          onsubmit="return confirm('Are you sure you want to remove this dancer from the competition?');">
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-user-minus"></i> Remove
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No dancers registered for this competition yet.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Dancer Modal -->
+<div class="modal fade" id="addDancerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Dancer to Competition</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Level</th>
+                                <th>Email</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dancer in available_dancers %}
+                            <tr>
+                                <td>{{ dancer.first_name }} {{ dancer.last_name }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ dancer.level }}</span>
+                                </td>
+                                <td>{{ dancer.user.email }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('assign_dancer', competition_id=competition.id, dancer_id=dancer.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="fas fa-plus"></i> Add
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if not available_dancers %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No available dancers to add.
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

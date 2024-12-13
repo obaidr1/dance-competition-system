@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Competition Results</h2>
+    
+    <div class="row">
+        {% for competition in competitions %}
+        <div class="col-md-4 mb-4">
+            <div class="card competition-card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ competition.name }}</h5>
+                    <p class="card-text">
+                        <strong>Date:</strong> {{ competition.date.strftime('%Y-%m-%d') }}<br>
+                        <strong>Status:</strong> {{ competition.status }}
+                    </p>
+                    <a href="{{ url_for('view_results', competition_id=competition.id) }}" 
+                       class="btn btn-primary">View Results</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not competitions %}
+    <div class="alert alert-info">
+        No competitions available.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

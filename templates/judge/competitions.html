@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Judge Panel - Competitions</h2>
+    
+    <div class="row">
+        {% for competition in competitions %}
+        <div class="col-md-4 mb-4">
+            <div class="card competition-card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ competition.name }}</h5>
+                    <p class="card-text">
+                        <strong>Date:</strong> {{ competition.date.strftime('%Y-%m-%d') }}<br>
+                        <strong>Status:</strong> {{ competition.status }}
+                    </p>
+                    {% if competition.status == 'active' %}
+                    <a href="{{ url_for('submit_score', competition_id=competition.id) }}" 
+                       class="btn btn-primary">Score Dancers</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not competitions %}
+    <div class="alert alert-info">
+        No competitions assigned to you at the moment.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

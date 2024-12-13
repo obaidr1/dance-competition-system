@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ competition.name }} - Results</h2>
+    <p class="lead">Date: {{ competition.date.strftime('%Y-%m-%d') }}</p>
+
+    {% for round in results %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>{{ round.round }} Round</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table results-table">
+                    <thead>
+                        <tr>
+                            <th>Leader</th>
+                            <th>Follower</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in round.results %}
+                        <tr>
+                            <td>{{ result.leader }}</td>
+                            <td>{{ result.follower }}</td>
+                            <td>{{ "%.2f"|format(result.score) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if not round.results %}
+            <div class="alert alert-info">No results available for this round.</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if not results %}
+    <div class="alert alert-info">
+        No results available for this competition yet.
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{{ url_for('view_results_list') }}" class="btn btn-secondary">Back to Results List</a>
+    </div>
+</div>
+{% endblock %}

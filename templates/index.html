@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold mb-3 welcome-text">Welcome to Jack & Jill Competitions</h1>
+        <p class="lead text-muted">Organize and manage dance competitions with ease</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="dashboard-card card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-trophy fa-3x mb-3 text-primary"></i>
+                    <h2 class="h4 card-title">Active Competitions</h2>
+                    <p class="card-text">View ongoing competitions and their details.</p>
+                    <a href="{{ url_for('view_competitions') }}" class="btn btn-primary">
+                        <i class="fas fa-list me-2"></i>View Competitions
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="dashboard-card card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-star fa-3x mb-3 text-warning"></i>
+                    <h2 class="h4 card-title">Results</h2>
+                    <p class="card-text">Check competition results and rankings.</p>
+                    <a href="{{ url_for('view_results_list') }}" class="btn btn-primary">
+                        <i class="fas fa-chart-bar me-2"></i>View Results
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% if not current_user.is_authenticated %}
+        <div class="col-md-6 col-lg-4">
+            <div class="dashboard-card card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-sign-in-alt fa-3x mb-3 text-success"></i>
+                    <h2 class="h4 card-title">Login</h2>
+                    <p class="card-text">Admin and judge access.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('login') }}" class="btn btn-primary">
+                            <i class="fas fa-user me-2"></i>User Login
+                        </a>
+                        <a href="{{ url_for('admin_login') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-user-shield me-2"></i>Admin Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% elif current_user.role == 'admin' %}
+        <div class="col-md-6 col-lg-4">
+            <div class="dashboard-card card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-cogs fa-3x mb-3 text-danger"></i>
+                    <h2 class="h4 card-title">Admin Panel</h2>
+                    <p class="card-text">Manage competitions and users.</p>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% elif current_user.role == 'judge' %}
+        <div class="col-md-6 col-lg-4">
+            <div class="dashboard-card card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-gavel fa-3x mb-3 text-info"></i>
+                    <h2 class="h4 card-title">Judge Panel</h2>
+                    <p class="card-text">Score competitions and view assignments.</p>
+                    <a href="{{ url_for('judge_dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-clipboard-list me-2"></i>View Assignments
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s ease-in-out;
+        border: none;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .fa-3x {
+        transition: transform 0.2s ease-in-out;
+    }
+    .card:hover .fa-3x {
+        transform: scale(1.1);
+    }
+    .btn {
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+    }
+    .display-4 {
+        color: #2c3e50;
+    }
+    .lead {
+        font-size: 1.25rem;
+    }
+    .dashboard-card {
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        background-color: #fff;
+    }
+    .dashboard-card i {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    .dashboard-card h3 {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .dashboard-card p {
+        margin-bottom: 20px;
+    }
+    .dashboard-card a {
+        text-decoration: none;
+        color: #337ab7;
+    }
+    .dashboard-card a:hover {
+        color: #23527c;
+    }
+</style>
+{% endblock %}
