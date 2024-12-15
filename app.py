@@ -7,7 +7,6 @@ import secrets
 from functools import wraps
 import logging
 from authlib.integrations.flask_client import OAuth
-from flask_mail import Mail, Message
 import os
 
 app = Flask(__name__)
@@ -18,15 +17,19 @@ if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Email configuration (optional)
+mail = None
 if os.getenv('MAIL_SERVER'):
-    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
-    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-    mail = Mail(app)
+    try:
+        from flask_mail import Mail, Message
+        app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+        app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+        app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
+        app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+        app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+        mail = Mail(app)
+    except ImportError:
+        app.logger.warning('Flask-Mail not installed. Email features will be disabled.')
 else:
-    mail = None
     app.logger.warning('Email configuration not found. Email features will be disabled.')
 
 # Initialize extensions
