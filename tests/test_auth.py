@@ -13,9 +13,11 @@ def test_successful_login(client, app):
     # Create a test user
     with app.app_context():
         user = User(
+            username='testuser',
             email='test@example.com',
-            password_hash=generate_password_hash('password'),
-            is_admin=False
+            password=generate_password_hash('password'),
+            role='dancer',
+            is_active=True
         )
         db.session.add(user)
         db.session.commit()
