@@ -27,8 +27,12 @@ if os.getenv('MAIL_SERVER'):
         app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
         app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
         mail = Mail(app)
+        app.logger.info('Email configuration loaded successfully')
     except ImportError:
         app.logger.warning('Flask-Mail not installed. Email features will be disabled.')
+    except Exception as e:
+        app.logger.error(f'Error loading email configuration: {str(e)}')
+        app.logger.warning('Email features will be disabled.')
 else:
     app.logger.warning('Email configuration not found. Email features will be disabled.')
 
@@ -732,7 +736,8 @@ Please click the following link to register:
 
 This invitation will expire in 7 days.'''
             
-            mail.send(msg)
+            if mail:
+                mail.send(msg)
             db.session.commit()
             flash(f'Invitation sent to {email}', 'success')
             return redirect(url_for('admin_dashboard'))
