@@ -1,6 +1,7 @@
 Flask==2.2.2
 Flask-SQLAlchemy==3.0.2
 Flask-Login==0.6.2
+Flask-Mail==0.9.1
 Werkzeug==2.2.2
 SQLAlchemy==1.4.41
 python-dotenv==0.21.0
