@@ -18,6 +18,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Email configuration (optional)
 mail = None
+Message = None  # Define Message as None by default
 if os.getenv('MAIL_SERVER'):
     try:
         from flask_mail import Mail, Message
@@ -722,24 +723,33 @@ def invite_tester():
             )
             db.session.add(invitation)
             
-            # Send invitation email
-            invite_url = url_for('register', token=token, _external=True)
-            msg = Message(
-                'Dance Competition System - Test Invitation',
-                sender=app.config['MAIL_USERNAME'],
-                recipients=[email]
-            )
-            msg.body = f'''You have been invited to test the Dance Competition System!
-            
-Please click the following link to register:
-{invite_url}
+            # Send invitation email if mail is configured
+            if mail and Message:
+                try:
+                    invite_url = url_for('register', token=token, _external=True)
+                    msg = Message(
+                        'Dance Competition System - Test Invitation',
+                        sender=app.config['MAIL_USERNAME'],
+                        recipients=[email]
+                    )
+                    msg.body = f'''You have been invited to test the Dance Competition System!
+                    
+    Please click the following link to register:
+    {invite_url}
 
-This invitation will expire in 7 days.'''
+    This invitation will expire in 7 days.'''
+                    
+                    mail.send(msg)
+                    app.logger.info(f'Invitation email sent to {email}')
+                except Exception as e:
+                    app.logger.error(f'Failed to send invitation email: {str(e)}')
+                    flash('Failed to send invitation email, but invitation was created', 'warning')
+            else:
+                app.logger.warning('Email not configured. Skipping invitation email.')
+                flash('Invitation created, but email could not be sent (email not configured)', 'warning')
             
-            if mail:
-                mail.send(msg)
             db.session.commit()
-            flash(f'Invitation sent to {email}', 'success')
+            flash(f'Invitation created for {email}', 'success')
             return redirect(url_for('admin_dashboard'))
             
     return render_template('admin/invite_tester.html')
