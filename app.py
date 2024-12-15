@@ -568,32 +568,49 @@ def register():
 
 @app.route('/login/google')
 def google_login():
-    redirect_uri = url_for('google_authorize', _external=True)
-    return google.authorize_redirect(redirect_uri)
+    app.logger.info('Starting Google OAuth login process')
+    try:
+        redirect_uri = url_for('google_authorize', _external=True)
+        app.logger.info(f'Redirect URI: {redirect_uri}')
+        return google.authorize_redirect(redirect_uri)
+    except Exception as e:
+        app.logger.error(f'Error in google_login: {str(e)}')
+        flash('Error connecting to Google. Please try again.', 'error')
+        return redirect(url_for('login'))
 
 @app.route('/login/google/authorize')
 def google_authorize():
-    token = google.authorize_access_token()
-    resp = google.get('userinfo')
-    user_info = resp.json()
-    
-    # Check if user exists
-    user = User.query.filter_by(email=user_info['email']).first()
-    
-    if not user:
-        # Create new user
-        user = User(
-            email=user_info['email'],
-            username=user_info['name'],
-            password='',  # No password for Google users
-            role='user'
-        )
-        db.session.add(user)
-        db.session.commit()
-    
-    login_user(user)
-    flash('Successfully logged in with Google!', 'success')
-    return redirect(url_for('index'))
+    app.logger.info('Received Google OAuth callback')
+    try:
+        token = google.authorize_access_token()
+        app.logger.info('Successfully obtained access token')
+        resp = google.get('userinfo')
+        user_info = resp.json()
+        app.logger.info(f'Got user info: {user_info.get("email")}')
+        
+        # Check if user exists
+        user = User.query.filter_by(email=user_info['email']).first()
+        
+        if not user:
+            app.logger.info(f'Creating new user for {user_info.get("email")}')
+            # Create new user
+            user = User(
+                email=user_info['email'],
+                username=user_info.get('name', '').split('@')[0],
+                password='',  # No password for Google users
+                role='user'
+            )
+            db.session.add(user)
+            db.session.commit()
+        
+        login_user(user)
+        app.logger.info(f'Successfully logged in user {user.email}')
+        flash('Successfully logged in with Google!', 'success')
+        return redirect(url_for('index'))
+    except Exception as e:
+        app.logger.error(f'Error in google_authorize: {str(e)}')
+        flash('Error during Google login. Please try again.', 'error')
+        return redirect(url_for('login'))
 
 @app.route('/admin/competitions/<int:competition_id>/rounds')
 @login_required
