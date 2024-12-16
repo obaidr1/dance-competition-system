@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write # Required for Codecov PR comments
 
 jobs:
   build:
@@ -15,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 2 # Required for Codecov to work properly
     
     - name: Set up Python 3.12
       uses: actions/setup-python@v3
@@ -36,9 +39,21 @@ jobs:
         
     - name: Run Tests with Coverage
       run: |
-        python -m pytest tests/ --cov=./ --cov-report=xml
+        python -m pytest tests/ --cov=./ --cov-report=xml --cov-report=term
+        
+    - name: Debug Coverage Report
+      run: |
+        echo "Checking if coverage report exists:"
+        ls -l coverage.xml
+        echo "Content of coverage report:"
+        head -n 20 coverage.xml
         
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        fail_ci_if_error: true
+        verbose: true
