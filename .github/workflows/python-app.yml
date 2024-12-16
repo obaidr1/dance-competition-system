@@ -46,8 +46,9 @@ jobs:
       run: sleep 60
         
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        slug: obaidr1/dance-competition-system
-        fail_ci_if_error: false
-        verbose: true
+      run: |
+        curl -Os https://uploader.codecov.io/latest/linux/codecov
+        chmod +x codecov
+        ./codecov -t ${CODECOV_TOKEN} -f coverage.xml -B ${GITHUB_REF#refs/heads/} -C ${GITHUB_SHA}
+      env:
+        CODECOV_TOKEN: f9dbe50d-14fe-45f1-8fff-8762d94204c1
