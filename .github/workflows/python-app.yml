@@ -41,6 +41,9 @@ jobs:
       run: |
         python -m pytest tests/ --cov=./ --cov-report=xml --cov-report=term
 
+    - name: Wait for rate limit
+      run: sleep 60
+
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
       with:
