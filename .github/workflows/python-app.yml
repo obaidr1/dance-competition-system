@@ -1,20 +1,16 @@
 name: Python application
-
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-
 permissions:
   contents: write
   pull-requests: write
   actions: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
       with:
@@ -42,11 +38,7 @@ jobs:
       run: |
         python -m pytest tests/ --cov=./ --cov-report=xml --cov-report=term
 
-    - name: Download Codecov Uploader
-      run: |
-        curl -Os https://uploader.codecov.io/latest/linux/codecov
-        chmod +x codecov
-
-    - name: Upload to Codecov
-      run: |
-        ./codecov -t ${{ secrets.CODECOV_TOKEN }} -f coverage.xml -F unittests -v -B master -C ${{ github.sha }}
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
