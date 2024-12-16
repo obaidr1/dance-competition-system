@@ -11,7 +11,8 @@ def app():
         'SECRET_KEY': 'test-key',
         'WTF_CSRF_ENABLED': False,
         'GOOGLE_CLIENT_ID': 'test-client-id',
-        'GOOGLE_CLIENT_SECRET': 'test-client-secret'
+        'GOOGLE_CLIENT_SECRET': 'test-client-secret',
+        'LOGIN_DISABLED': True  # Disable login for testing
     })
     
     # Ensure static folder exists for testing

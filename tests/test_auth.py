@@ -18,13 +18,14 @@ def test_successful_login(client, app):
         db.session.commit()
         
         # Try to login
-        response = client.post('/login', data={
-            'email': 'test@example.com',
-            'password': 'password123'
-        }, follow_redirects=True)
-        
-        assert response.status_code == 200
-        assert b'Competitions' in response.data  # We should see the competitions page
+        with client:  
+            response = client.post('/login', data={
+                'email': 'test@example.com',
+                'password': 'password123'
+            }, follow_redirects=True)
+            
+            assert response.status_code == 200
+            assert b'Competitions' in response.data  # We should see the competitions page
 
 def test_failed_login(client):
     """Test login with incorrect credentials"""

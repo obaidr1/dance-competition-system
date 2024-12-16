@@ -8,6 +8,7 @@ from functools import wraps
 import logging
 from authlib.integrations.flask_client import OAuth
 import os
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
@@ -28,6 +29,8 @@ db.init_app(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'message'
 
 # Create tables if they don't exist
 with app.app_context():
@@ -110,6 +113,7 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # If user is already logged in, redirect to appropriate page
     if current_user.is_authenticated:
         if current_user.role == 'admin':
             return redirect(url_for('admin_dashboard'))
@@ -122,14 +126,14 @@ def login():
         user = User.query.filter_by(email=email).first()
         
         if user and check_password_hash(user.password, password):
-            login_user(user)
+            # Log in the user and remember them
+            login_user(user, remember=True)
             flash('Logged in successfully!', 'success')
             
-            # Get the next page from the query string
+            # Get next page from args or default to appropriate dashboard
             next_page = request.args.get('next')
-            if not next_page or not next_page.startswith('/'):
+            if not next_page or urlparse(next_page).netloc != '':
                 next_page = url_for('view_competitions')
-            
             return redirect(next_page)
         else:
             flash('Invalid email or password', 'error')
@@ -595,7 +599,6 @@ def reset_user_password(user_id):
 @app.route('/competitions')
 @login_required
 def view_competitions():
-    # Show all competitions for regular users
     competitions = Competition.query.all()
     return render_template('competitions.html', competitions=competitions)
 
