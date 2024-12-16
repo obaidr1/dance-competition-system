@@ -63,7 +63,7 @@ jobs:
       - name: Deploy to Railway
         run: |
           echo "Starting Railway deployment..."
-          railway up --service ${{ secrets.RAILWAY_SERVICE_NAME }} --environment production
+          railway up --service 1bdf1bde-6bdc-47fd-92aa-e9fb022bbf4e --environment production
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           FLASK_APP: app.py
