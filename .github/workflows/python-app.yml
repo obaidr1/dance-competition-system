@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write # Required for Codecov
 
 jobs:
   build:
@@ -38,10 +39,12 @@ jobs:
       run: |
         python -m pytest tests/ --cov=./ --cov-report=xml
         
-    # Temporarily commenting out Codecov upload until we have a token
-    # - name: Upload coverage to Codecov
-    #   uses: codecov/codecov-action@v3
-    #   with:
-    #     token: ${{ secrets.CODECOV_TOKEN }}
-    #     files: ./coverage.xml
-    #     fail_ci_if_error: false
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        fail_ci_if_error: false
+        verbose: true  # Added for more detailed output
