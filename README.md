@@ -1,31 +1,16 @@
-# Jack & Jill Dance Competition Management System
+# Dance Competition System
 
-A web application for managing Jack & Jill dance competitions, including features for competition organization, judging, and result tracking.
+[![codecov](https://codecov.io/gh/obaidr1/dance-competition-system/branch/master/graph/badge.svg?token=f9dbe50d-14fe-45f1-8fff-8762d94204c1)](https://codecov.io/gh/obaidr1/dance-competition-system)
 
-[![codecov](https://codecov.io/gh/obaidr1/dance-competition-system/branch/master/graph/badge.svg)](https://codecov.io/gh/obaidr1/dance-competition-system)
+A comprehensive system for managing dance competitions, including participant registration, scoring, and results management.
 
 ## Features
 
-### Admin Panel
-- Create and manage multiple Jack & Jill competitions
-- Add, edit, and delete dancers with detailed profiles
-- Manage competition rounds and advancement
-- Random pairing generation for each round
-
-### Judge Panel
-- Secure login system for judges
-- Scoring interface with multiple criteria:
-  - Timing
-  - Technique
-  - Partner Connection
-  - Musical Interpretation
-  - Presentation
-- Real-time score submission
-
-### Public Results
-- View competition results and rankings
-- Dynamic updates as rounds progress
-- Detailed scoring breakdown
+- Participant registration and management
+- Competition scheduling
+- Real-time scoring system
+- Results calculation and leaderboard
+- Judge management interface
 
 ## Project Structure
 ```
@@ -41,33 +26,23 @@ A web application for managing Jack & Jill dance competitions, including feature
     └── base.html      # Base template
 ```
 
-## Setup Instructions
+## Development
 
-1. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+This project uses Python with pytest for testing and Codecov for coverage reporting.
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Setup
 
-3. Initialize the database:
-   ```bash
-   flask shell
-   >>> from app import db
-   >>> db.create_all()
-   >>> exit()
-   ```
+1. Clone the repository
+2. Install dependencies: `pip install -r requirements.txt`
+3. Run tests: `pytest tests/`
 
-4. Run the application:
-   ```bash
-   python app.py
-   ```
+### Contributing
 
-5. Access the application at `http://localhost:5000`
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## User Roles
 
