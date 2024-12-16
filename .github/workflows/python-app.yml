@@ -11,10 +11,15 @@ permissions:
   pull-requests: write
   actions: write
 
+env:
+  CI_JOB_NAME: coverage-test
+
 jobs:
   coverage:
     name: Run Tests and Coverage
     runs-on: ubuntu-latest
+    env:
+      GITHUB_JOB_NAME: coverage-test
     steps:
     - uses: actions/checkout@v3
       with:
@@ -43,13 +48,15 @@ jobs:
         python -m pytest tests/ --cov=./ --cov-report=xml --cov-report=term
 
     - name: Wait for rate limit
-      run: sleep 60
+      run: sleep 300
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
+      env:
+        CODECOV_NAME: coverage-test
       with:
         file: ./coverage.xml
         flags: unittests
         fail_ci_if_error: true
-        name: codecov-umbrella
+        name: coverage-test
         verbose: true
