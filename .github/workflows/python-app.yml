@@ -14,8 +14,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     steps:
     - uses: actions/checkout@v3
@@ -43,14 +41,12 @@ jobs:
     - name: Run Tests with Coverage
       run: |
         python -m pytest tests/ --cov=./ --cov-report=xml --cov-report=term
-        
-    - name: Wait for rate limit
-      run: sleep 60
-        
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage.xml
-        fail_ci_if_error: true
-        verbose: true
+
+    - name: Download Codecov Uploader
+      run: |
+        curl -Os https://uploader.codecov.io/latest/linux/codecov
+        chmod +x codecov
+
+    - name: Upload to Codecov
+      run: |
+        ./codecov -t ${{ secrets.CODECOV_TOKEN }} -f coverage.xml -F unittests -v -B master -C ${{ github.sha }}
