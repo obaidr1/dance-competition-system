@@ -50,13 +50,25 @@ jobs:
     - name: Wait for rate limit
       run: sleep 300
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
-      env:
-        CODECOV_NAME: coverage-test
+    - name: Upload coverage to Codecov
+      uses: actions/github-script@v6
       with:
-        file: ./coverage.xml
-        flags: unittests
-        fail_ci_if_error: true
-        name: coverage-test
-        verbose: true
+        script: |
+          const maxAttempts = 5;
+          const waitTime = 60000; // 60 seconds
+          
+          for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+              await exec.exec('curl', ['-Os', 'https://uploader.codecov.io/latest/linux/codecov']);
+              await exec.exec('chmod', ['+x', 'codecov']);
+              await exec.exec('./codecov', ['-f', 'coverage.xml', '-F', 'unittests', '-v']);
+              console.log('Successfully uploaded coverage report');
+              break;
+            } catch (error) {
+              if (attempt === maxAttempts) {
+                throw error;
+              }
+              console.log(`Attempt ${attempt} failed. Waiting ${waitTime/1000} seconds before retry...`);
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+            }
+          }
