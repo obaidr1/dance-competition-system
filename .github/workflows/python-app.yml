@@ -7,8 +7,9 @@ on:
     branches: [ "master" ]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
+  actions: write
 
 jobs:
   build:
@@ -41,12 +42,14 @@ jobs:
       run: |
         python -m pytest tests/ --cov=./ --cov-report=xml --cov-report=term
         
+    - name: Wait for rate limit
+      run: sleep 60
+        
     - name: Upload coverage reports to Codecov
-      run: |
-        # Download codecov uploader
-        curl -Os https://uploader.codecov.io/latest/linux/codecov
-        chmod +x codecov
-        # Upload with token
-        ./codecov -t ${CODECOV_TOKEN} -f coverage.xml
+      uses: codecov/codecov-action@v4
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      with:
+        slug: obaidr1/dance-competition-system
+        fail_ci_if_error: false
+        verbose: true
