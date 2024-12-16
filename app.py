@@ -23,6 +23,14 @@ else:
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Initialize extensions
+db.init_app(app)
+
+# Create tables if they don't exist
+with app.app_context():
+    db.create_all()
+    app.logger.info('Database tables created successfully')
+
 # Email configuration (optional)
 mail = None
 Message = None  # Define Message as None by default
@@ -44,8 +52,7 @@ if os.getenv('MAIL_SERVER'):
 else:
     app.logger.warning('Email configuration not found. Email features will be disabled.')
 
-# Initialize extensions
-db.init_app(app)
+# Initialize login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
