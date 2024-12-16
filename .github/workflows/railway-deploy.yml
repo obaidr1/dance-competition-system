@@ -35,7 +35,7 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: |
           mkdir -p instance
-          pytest -v --cov=./ --cov-report=xml
+          python -m pytest -v --cov=./ --cov-report=xml
           
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -60,7 +60,12 @@ jobs:
       - name: Install Railway
         run: npm install -g @railway/cli
 
-      - name: Deploy
-        run: railway up
+      - name: Deploy to Railway
+        run: |
+          echo "Starting Railway deployment..."
+          railway up --service ${{ secrets.RAILWAY_SERVICE_NAME }} --environment production
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          FLASK_APP: app.py
+          FLASK_ENV: production
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
