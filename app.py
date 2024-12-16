@@ -107,7 +107,7 @@ def index():
     if current_user.is_authenticated:
         if current_user.role == 'admin':
             return redirect(url_for('admin_dashboard'))
-        return redirect(url_for('competitions'))
+        return redirect(url_for('list_competitions'))
     return render_template('landing.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -123,7 +123,7 @@ def login():
             flash('Logged in successfully!', 'success')
             if user.role == 'admin':
                 return redirect(url_for('admin_dashboard'))
-            return redirect(url_for('competitions'))
+            return redirect(url_for('list_competitions'))
         else:
             flash('Invalid email or password', 'error')
     
