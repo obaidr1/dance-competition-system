@@ -31,8 +31,8 @@ jobs:
           FLASK_ENV: testing
           SECRET_KEY: test-secret-key
           DATABASE_URL: sqlite:///test.db
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_CLIENT_ID: test-client-id
+          GOOGLE_CLIENT_SECRET: test-client-secret
         run: |
           mkdir -p instance
           python -m pytest -v --cov=./ --cov-report=xml

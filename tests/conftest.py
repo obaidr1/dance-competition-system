@@ -9,7 +9,9 @@ def app():
         'TESTING': True,
         'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
         'SECRET_KEY': 'test-secret-key',
-        'WTF_CSRF_ENABLED': False
+        'WTF_CSRF_ENABLED': False,
+        'GOOGLE_CLIENT_ID': 'test-client-id',
+        'GOOGLE_CLIENT_SECRET': 'test-client-secret'
     })
     
     # Create tables
@@ -31,11 +33,12 @@ def runner(app):
     return app.test_cli_runner()
 
 @pytest.fixture
-def auth_client(client):
+def auth_client(client, app):
     """A test client with authentication helpers"""
     class AuthClient:
-        def __init__(self, client):
+        def __init__(self, client, app):
             self._client = client
+            self._app = app
             
         def login(self, email="test@example.com", password="password"):
             return self._client.post('/login', data={
@@ -46,4 +49,4 @@ def auth_client(client):
         def logout(self):
             return self._client.get('/logout', follow_redirects=True)
             
-    return AuthClient(client)
+    return AuthClient(client, app)
