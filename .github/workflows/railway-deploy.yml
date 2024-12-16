@@ -64,7 +64,7 @@ jobs:
         run: |
           echo "Starting Railway deployment..."
           railway link --project 18a66a94-a023-4bca-88cf-f28c8272f6fb
-          railway variables set DATABASE_URL=${{ secrets.DATABASE_URL }}
+          railway variables set DATABASE_URL='${{ Postgres.DATABASE_URL }}'
           railway variables set SECRET_KEY=${{ secrets.SECRET_KEY }}
           railway variables set FLASK_APP=app.py
           railway variables set FLASK_ENV=production
