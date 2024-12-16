@@ -64,10 +64,6 @@ jobs:
         run: |
           echo "Starting Railway deployment..."
           railway link --project 18a66a94-a023-4bca-88cf-f28c8272f6fb
-          railway variables set DATABASE_URL='${{ Postgres.DATABASE_URL }}'
-          railway variables set SECRET_KEY=${{ secrets.SECRET_KEY }}
-          railway variables set FLASK_APP=app.py
-          railway variables set FLASK_ENV=production
-          railway up --service 1bdf1bde-6bdc-47fd-92aa-e9fb022bbf4e --environment production
+          railway up --service 1bdf1bde-6bdc-47fd-92aa-e9fb022bbf4e --environment production --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

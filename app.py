@@ -12,15 +12,15 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
 
-# Check if DATABASE_URL exists before trying to use it
+# Configure database
 database_url = os.getenv('DATABASE_URL')
-if database_url:
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-    if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
-        app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dance.db'
+if database_url and database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+elif not database_url:
+    database_url = 'sqlite:///dance.db'
+    app.logger.warning('No DATABASE_URL found, using SQLite database')
 
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
@@ -28,8 +28,11 @@ db.init_app(app)
 
 # Create tables if they don't exist
 with app.app_context():
-    db.create_all()
-    app.logger.info('Database tables created successfully')
+    try:
+        db.create_all()
+        app.logger.info('Database tables created successfully')
+    except Exception as e:
+        app.logger.error(f'Error creating database tables: {str(e)}')
 
 # Email configuration (optional)
 mail = None
