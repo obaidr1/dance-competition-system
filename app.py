@@ -25,6 +25,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
 db.init_app(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 # Create tables if they don't exist
 with app.app_context():
@@ -54,11 +57,6 @@ if os.getenv('MAIL_SERVER'):
         app.logger.warning('Email features will be disabled.')
 else:
     app.logger.warning('Email configuration not found. Email features will be disabled.')
-
-# Initialize login manager
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
 
 # Set up logging
 if os.getenv('FLASK_ENV') == 'production':
@@ -112,6 +110,11 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        if current_user.role == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('view_competitions'))
+
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
@@ -121,9 +124,13 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             flash('Logged in successfully!', 'success')
-            if user.role == 'admin':
-                return redirect(url_for('admin_dashboard'))
-            return redirect(url_for('view_competitions'))
+            
+            # Get the next page from the query string
+            next_page = request.args.get('next')
+            if not next_page or not next_page.startswith('/'):
+                next_page = url_for('view_competitions')
+            
+            return redirect(next_page)
         else:
             flash('Invalid email or password', 'error')
     
@@ -588,12 +595,14 @@ def reset_user_password(user_id):
 @app.route('/competitions')
 @login_required
 def view_competitions():
+    # Show all competitions for regular users
     competitions = Competition.query.all()
     return render_template('competitions.html', competitions=competitions)
 
 @app.route('/results')
 @login_required
 def view_results_list():
+    # Get completed competitions
     competitions = Competition.query.filter_by(status='completed').all()
     return render_template('results_list.html', competitions=competitions)
 
@@ -776,6 +785,38 @@ def invite_tester():
             return redirect(url_for('admin_dashboard'))
             
     return render_template('admin/invite_tester.html')
+
+@app.route('/competition/<int:competition_id>/results')
+@login_required
+def view_results(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    rounds = Round.query.filter_by(competition_id=competition_id).order_by(Round.number).all()
+    
+    # Format results for the template
+    results = []
+    for round in rounds:
+        round_data = {
+            'round': f'Round {round.number}',
+            'results': []
+        }
+        
+        # Get pairings and scores for this round
+        pairings = Pairing.query.filter_by(round_id=round.id).all()
+        for pairing in pairings:
+            scores = Score.query.filter_by(pairing_id=pairing.id).all()
+            if scores:
+                avg_score = sum(score.value for score in scores) / len(scores)
+                round_data['results'].append({
+                    'leader': pairing.leader.name if pairing.leader else 'TBD',
+                    'follower': pairing.follower.name if pairing.follower else 'TBD',
+                    'score': avg_score
+                })
+        
+        results.append(round_data)
+    
+    return render_template('results.html', 
+                         competition=competition,
+                         results=results)
 
 if __name__ == '__main__':
     app.logger.setLevel(logging.DEBUG)
