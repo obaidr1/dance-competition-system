@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dance Competition System - Streamline Your Jack & Jill Competitions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h1>DanceComp</h1>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#testimonials">Testimonials</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#faq">FAQ</a>
+            </div>
+            <div class="auth-buttons">
+                <a href="{{ url_for('login') }}" class="btn btn-outline">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-primary">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Streamline Your Jack & Jill Competitions</h1>
+            <p>From managing dancers to live scoring, our tool has everything you need to run a smooth and professional competition.</p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-large">Get Started for Free</a>
+                <a href="#features" class="btn btn-outline btn-large">Explore Features</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2>Everything You Need in One Platform</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-users-cog"></i>
+                    <h3>Admin Panel</h3>
+                    <p>Effortlessly manage competitions, dancers, and rounds.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-star"></i>
+                    <h3>Judging Panel</h3>
+                    <p>Simple, intuitive scoring for judges.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Real-Time Results</h3>
+                    <p>Display scores dynamically for participants and audiences.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-sliders-h"></i>
+                    <h3>Customizable Settings</h3>
+                    <p>Tailor rounds, music, and levels to your needs.</p>
+                </div>
+            </div>
+            <a href="#" class="btn btn-secondary">See Full Feature List</a>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <h2>How It Works in 3 Simple Steps</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Create a Competition</h3>
+                    <p>Set up rounds, add dancers, and configure judging criteria.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Score and Manage</h3>
+                    <p>Judges submit scores, and the app handles pairing and results.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>View Results</h3>
+                    <p>Publicly display rankings and scores live.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials">
+        <div class="container">
+            <h2>Loved by Dance Communities Worldwide</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <img src="{{ url_for('static', filename='images/testimonial1.jpg') }}" alt="Testimonial 1">
+                    <p>"This app made organizing our championship a breeze. The judging panel was so easy to use!"</p>
+                    <h4>Sarah Johnson</h4>
+                    <span>Competition Organizer</span>
+                </div>
+                <div class="testimonial-card">
+                    <img src="{{ url_for('static', filename='images/testimonial2.jpg') }}" alt="Testimonial 2">
+                    <p>"The real-time results feature keeps everyone engaged throughout the competition."</p>
+                    <h4>Mike Davis</h4>
+                    <span>Head Judge</span>
+                </div>
+                <div class="testimonial-card">
+                    <img src="{{ url_for('static', filename='images/testimonial3.jpg') }}" alt="Testimonial 3">
+                    <p>"Finally, a platform that understands what dance competitions need!"</p>
+                    <h4>Emma Wilson</h4>
+                    <span>Dance Studio Owner</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="faq">
+        <div class="container">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h3>How do I set up a competition?</h3>
+                    <p>Simply create an account, click "New Competition," and follow our step-by-step guide.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Can judges use their phones to score?</h3>
+                    <p>Yes! Our platform is fully mobile-responsive and works on any device.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Is there a free trial available?</h3>
+                    <p>Yes, you can try all features free for 14 days, no credit card required.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Can I export the results?</h3>
+                    <p>Absolutely! Export results in PDF, Excel, or CSV formats.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>DanceComp</h3>
+                    <p>Powering Jack & Jill Competitions Everywhere</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <a href="#features">Features</a>
+                    <a href="#how-it-works">How It Works</a>
+                    <a href="#testimonials">Testimonials</a>
+                    <a href="#faq">FAQ</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Stay Updated</h4>
+                    <form class="subscribe-form">
+                        <input type="email" placeholder="Enter your email">
+                        <button type="submit" class="btn btn-primary">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 DanceComp. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
