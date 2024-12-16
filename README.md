@@ -1,7 +1,5 @@
 # Dance Competition System
 
-[![codecov](https://codecov.io/gh/obaidr1/dance-competition-system/branch/master/graph/badge.svg?token=f9dbe50d-14fe-45f1-8fff-8762d94204c1)](https://codecov.io/gh/obaidr1/dance-competition-system)
-
 A comprehensive system for managing dance competitions, including participant registration, scoring, and results management.
 
 ## Features
@@ -28,7 +26,7 @@ A comprehensive system for managing dance competitions, including participant re
 
 ## Development
 
-This project uses Python with pytest for testing and Codecov for coverage reporting.
+This project uses Python with pytest for testing.
 
 ### Setup
 
