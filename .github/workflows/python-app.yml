@@ -13,8 +13,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     steps:
     - uses: actions/checkout@v3
@@ -44,11 +42,11 @@ jobs:
         python -m pytest tests/ --cov=./ --cov-report=xml --cov-report=term
         
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3.1.4
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage.xml
-        fail_ci_if_error: false  # Don't fail the build if upload fails
-        verbose: true
-        retry_on_rate_limit: true  # Add retry mechanism
-        retry_delay: 30  # Wait 30 seconds between retries
+      run: |
+        # Download codecov uploader
+        curl -Os https://uploader.codecov.io/latest/linux/codecov
+        chmod +x codecov
+        # Upload with token
+        ./codecov -t ${CODECOV_TOKEN} -f coverage.xml
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
