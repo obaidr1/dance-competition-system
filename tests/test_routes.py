@@ -7,8 +7,9 @@ def test_index_route(client):
     """Test the index route"""
     response = client.get('/')
     assert response.status_code == 200
-    assert b'DanceComp' in response.data  # Check for our new landing page title
-    assert b'Streamline Your Jack &amp; Jill Competitions' in response.data
+    # Check for key elements of the landing page
+    assert b'DanceComp' in response.data
+    assert b'Get Started' in response.data
 
 def test_competitions_route_unauthorized(client):
     """Test that unauthorized users are redirected from competitions route"""

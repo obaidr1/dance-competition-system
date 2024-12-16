@@ -8,11 +8,14 @@ def app():
     flask_app.config.update({
         'TESTING': True,
         'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-        'SECRET_KEY': 'test-secret-key',
+        'SECRET_KEY': 'test-key',
         'WTF_CSRF_ENABLED': False,
         'GOOGLE_CLIENT_ID': 'test-client-id',
         'GOOGLE_CLIENT_SECRET': 'test-client-secret'
     })
+    
+    # Ensure static folder exists for testing
+    os.makedirs(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'images'), exist_ok=True)
     
     # Create tables
     with flask_app.app_context():
