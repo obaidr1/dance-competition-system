@@ -2,6 +2,8 @@
 
 A web application for managing Jack & Jill dance competitions, including features for competition organization, judging, and result tracking.
 
+[![codecov](https://codecov.io/gh/obaidr1/dance-competition-system/branch/master/graph/badge.svg)](https://codecov.io/gh/obaidr1/dance-competition-system)
+
 ## Features
 
 ### Admin Panel
