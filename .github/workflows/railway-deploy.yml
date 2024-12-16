@@ -13,10 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         
-      - name: Install Railway
-        run: npm install -g @railway/cli
-        
       - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up
+        uses: bervProject/railway-deploy@main
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
