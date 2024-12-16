@@ -27,12 +27,15 @@ jobs:
           
       - name: Run tests
         env:
+          FLASK_APP: app.py
+          FLASK_ENV: testing
           SECRET_KEY: test-secret-key
           DATABASE_URL: sqlite:///test.db
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: |
-          pytest --cov=./ --cov-report=xml
+          mkdir -p instance
+          pytest -v --cov=./ --cov-report=xml
           
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

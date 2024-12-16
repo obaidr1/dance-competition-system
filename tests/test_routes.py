@@ -19,10 +19,11 @@ def test_competitions_route_authorized(client, app):
     """Test that authorized users can access competitions route"""
     with app.app_context():
         # Create a regular user
+        hashed_password = generate_password_hash('password')
         user = User(
             username='testuser',
             email='test@example.com',
-            password=generate_password_hash('password'),
+            password=hashed_password,
             role='dancer',
             is_active=True
         )
@@ -49,10 +50,11 @@ def test_admin_route_authorized(client, app):
     """Test that admin users can access admin routes"""
     with app.app_context():
         # Create an admin user
+        hashed_password = generate_password_hash('password')
         admin = User(
             username='admin',
             email='admin@example.com',
-            password=generate_password_hash('password'),
+            password=hashed_password,
             role='admin',
             is_active=True
         )

@@ -10,12 +10,13 @@ def test_login_page(client):
 
 def test_successful_login(client, app):
     """Test successful login with correct credentials"""
-    # Create a test user
+    # Create a test user with hashed password
+    hashed_password = generate_password_hash('password')
     with app.app_context():
         user = User(
             username='testuser',
             email='test@example.com',
-            password=generate_password_hash('password'),
+            password=hashed_password,
             role='dancer',
             is_active=True
         )
