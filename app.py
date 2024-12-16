@@ -105,7 +105,9 @@ class TestInvitation(db.Model):
 @app.route('/')
 def index():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        if current_user.role == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('competitions'))
     return render_template('landing.html')
 
 @app.route('/login', methods=['GET', 'POST'])

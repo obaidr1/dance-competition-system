@@ -9,28 +9,22 @@ def test_login_page(client):
     assert b'Login' in response.data
 
 def test_successful_login(client, app):
-    """Test successful login with correct credentials"""
-    # Create a test user with hashed password
-    hashed_password = generate_password_hash('password')
+    """Test successful login"""
     with app.app_context():
-        user = User(
-            username='testuser',
-            email='test@example.com',
-            password=hashed_password,
-            role='dancer',
-            is_active=True
-        )
+        # Create a test user
+        hashed_password = generate_password_hash('password123')
+        user = User(username='testuser', email='test@example.com', password=hashed_password, role='dancer')
         db.session.add(user)
         db.session.commit()
-    
-    # Try to login
-    response = client.post('/login', data={
-        'email': 'test@example.com',
-        'password': 'password'
-    }, follow_redirects=True)
-    
-    assert response.status_code == 200
-    assert b'Welcome' in response.data or b'Dashboard' in response.data
+        
+        # Try to login
+        response = client.post('/login', data={
+            'email': 'test@example.com',
+            'password': 'password123'
+        }, follow_redirects=True)
+        
+        assert response.status_code == 200
+        assert b'Competitions' in response.data  # We should see the competitions page
 
 def test_failed_login(client):
     """Test login with incorrect credentials"""
