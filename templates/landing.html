@@ -100,23 +100,72 @@
         <div class="container">
             <h2>Loved by Dance Communities Worldwide</h2>
             <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <img src="{{ url_for('static', filename='images/testimonial1.jpg') }}" alt="Testimonial 1">
-                    <p>"This app made organizing our championship a breeze. The judging panel was so easy to use!"</p>
-                    <h4>Sarah Johnson</h4>
-                    <span>Competition Organizer</span>
+                <div class="testimonial">
+                    <img src="{{ url_for('static', filename='images/testimonial1.jpg') }}" alt="Sarah Johnson">
+                    <blockquote>
+                        "This app made organizing our championship a breeze. The judging panel was so easy to use, and the real-time results thrilled the participants!"
+                    </blockquote>
+                    <cite>Sarah Johnson, Event Organizer</cite>
                 </div>
-                <div class="testimonial-card">
-                    <img src="{{ url_for('static', filename='images/testimonial2.jpg') }}" alt="Testimonial 2">
-                    <p>"The real-time results feature keeps everyone engaged throughout the competition."</p>
-                    <h4>Mike Davis</h4>
-                    <span>Head Judge</span>
+                <div class="testimonial">
+                    <img src="{{ url_for('static', filename='images/testimonial2.jpg') }}" alt="Mike Chen">
+                    <blockquote>
+                        "As a judge, I love how intuitive the scoring system is. It lets me focus on the dancers instead of wrestling with complicated software."
+                    </blockquote>
+                    <cite>Mike Chen, Professional Judge</cite>
                 </div>
-                <div class="testimonial-card">
-                    <img src="{{ url_for('static', filename='images/testimonial3.jpg') }}" alt="Testimonial 3">
-                    <p>"Finally, a platform that understands what dance competitions need!"</p>
-                    <h4>Emma Wilson</h4>
-                    <span>Dance Studio Owner</span>
+                <div class="testimonial">
+                    <img src="{{ url_for('static', filename='images/testimonial3.jpg') }}" alt="Emma Rodriguez">
+                    <blockquote>
+                        "The real-time results feature keeps our audience engaged throughout the entire competition. It's been a game-changer!"
+                    </blockquote>
+                    <cite>Emma Rodriguez, Dance Studio Owner</cite>
+                </div>
+            </div>
+            <a href="#" class="btn btn-secondary">Read More Reviews</a>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2>Flexible Pricing for All Competition Sizes</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Basic</h3>
+                    <div class="price">$49<span>/month</span></div>
+                    <ul>
+                        <li>Up to 50 dancers</li>
+                        <li>Basic scoring system</li>
+                        <li>Email support</li>
+                        <li>Results export</li>
+                    </ul>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">Start Free Trial</a>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="popular-tag">Most Popular</div>
+                    <h3>Pro</h3>
+                    <div class="price">$99<span>/month</span></div>
+                    <ul>
+                        <li>Up to 200 dancers</li>
+                        <li>Advanced scoring system</li>
+                        <li>Priority support</li>
+                        <li>Custom branding</li>
+                        <li>API access</li>
+                    </ul>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">Start Free Trial</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                    <div class="price">Custom</div>
+                    <ul>
+                        <li>Unlimited dancers</li>
+                        <li>Custom features</li>
+                        <li>24/7 support</li>
+                        <li>Dedicated account manager</li>
+                        <li>On-site training</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline">Contact Sales</a>
                 </div>
             </div>
         </div>
@@ -129,43 +178,55 @@
             <div class="faq-grid">
                 <div class="faq-item">
                     <h3>How do I set up a competition?</h3>
-                    <p>Simply create an account, click "New Competition," and follow our step-by-step guide.</p>
+                    <p>Simply log in to your account, click "Create Competition," and follow our step-by-step wizard. You'll have your competition ready in minutes!</p>
                 </div>
                 <div class="faq-item">
                     <h3>Can judges use their phones to score?</h3>
-                    <p>Yes! Our platform is fully mobile-responsive and works on any device.</p>
+                    <p>Yes! Our platform is fully mobile-responsive, allowing judges to score competitions from any device with a web browser.</p>
                 </div>
                 <div class="faq-item">
                     <h3>Is there a free trial available?</h3>
-                    <p>Yes, you can try all features free for 14 days, no credit card required.</p>
+                    <p>Absolutely! We offer a 14-day free trial on all our plans, no credit card required.</p>
                 </div>
                 <div class="faq-item">
                     <h3>Can I export the results?</h3>
-                    <p>Absolutely! Export results in PDF, Excel, or CSV formats.</p>
+                    <p>Yes, you can export results in multiple formats including PDF, Excel, and CSV.</p>
                 </div>
             </div>
+            <a href="#" class="btn btn-secondary">Visit Help Center</a>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-content">
+            <div class="footer-grid">
                 <div class="footer-section">
                     <h3>DanceComp</h3>
                     <p>Powering Jack & Jill Competitions Everywhere</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
                 </div>
                 <div class="footer-section">
                     <h4>Quick Links</h4>
-                    <a href="#features">Features</a>
-                    <a href="#how-it-works">How It Works</a>
-                    <a href="#testimonials">Testimonials</a>
-                    <a href="#faq">FAQ</a>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#testimonials">Testimonials</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                    </ul>
                 </div>
                 <div class="footer-section">
                     <h4>Legal</h4>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                    </ul>
                 </div>
                 <div class="footer-section">
                     <h4>Stay Updated</h4>
@@ -180,5 +241,27 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Sticky navigation
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 0) {
+                navbar.classList.add('sticky');
+            } else {
+                navbar.classList.remove('sticky');
+            }
+        });
+    </script>
 </body>
 </html>
