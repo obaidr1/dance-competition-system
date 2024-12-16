@@ -46,9 +46,7 @@ jobs:
       run: sleep 60
         
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      uses: codecov/codecov-action@v3
       with:
         slug: obaidr1/dance-competition-system
         fail_ci_if_error: false
