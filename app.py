@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Dancer, Competition, Round, Pairing, Score
@@ -9,6 +9,8 @@ import logging
 from authlib.integrations.flask_client import OAuth
 import os
 from urllib.parse import urlparse
+import requests
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
@@ -26,40 +28,47 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
 db.init_app(app)
+migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'message'
 
-# Create tables if they don't exist
-with app.app_context():
-    try:
-        db.create_all()
-        app.logger.info('Database tables created successfully')
-    except Exception as e:
-        app.logger.error(f'Error creating database tables: {str(e)}')
-
 # Email configuration (optional)
 mail = None
-Message = None  # Define Message as None by default
-if os.getenv('MAIL_SERVER'):
-    try:
-        from flask_mail import Mail, Message
-        app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-        app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-        app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
-        app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-        app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-        mail = Mail(app)
-        app.logger.info('Email configuration loaded successfully')
-    except ImportError:
-        app.logger.warning('Flask-Mail not installed. Email features will be disabled.')
-    except Exception as e:
-        app.logger.error(f'Error loading email configuration: {str(e)}')
-        app.logger.warning('Email features will be disabled.')
-else:
-    app.logger.warning('Email configuration not found. Email features will be disabled.')
+
+# Initialize database with migrations
+def init_db():
+    with app.app_context():
+        try:
+            # Create or upgrade database
+            db.create_all()
+            
+            # Create admin user if it doesn't exist
+            admin = User.query.filter_by(username='admin').first()
+            if not admin:
+                admin = User(
+                    username='admin',
+                    email='admin@example.com',
+                    password=generate_password_hash('admin123'),
+                    role='admin',
+                    city='San Francisco',
+                    city_id=5391959,
+                    country='United States',
+                    country_code='US',
+                    is_active=True
+                )
+                db.session.add(admin)
+                db.session.commit()
+                app.logger.info('Admin user created successfully')
+        except Exception as e:
+            app.logger.error(f'Error initializing database: {str(e)}')
+            raise e
+
+# Only initialize the database when running the app directly
+if __name__ == '__main__':
+    init_db()
 
 # Set up logging
 if os.getenv('FLASK_ENV') == 'production':
@@ -81,6 +90,60 @@ google = oauth.register(
     api_base_url='https://www.googleapis.com/oauth2/v1/',
     client_kwargs={'scope': 'openid email profile'},
 )
+
+# GeoNames API configuration
+GEONAMES_USERNAME = os.getenv('GEONAMES_USERNAME', 'obaidr')
+
+@app.route('/api/search-cities')
+def search_cities():
+    app.logger.info(f'GEONAMES_USERNAME: {GEONAMES_USERNAME}')
+    if not GEONAMES_USERNAME:
+        app.logger.error('GEONAMES_USERNAME not set. Please register at geonames.org and set the username in .env file')
+        return jsonify({'error': 'GeoNames API not configured. Please contact administrator.'}), 500
+        
+    query = request.args.get('q', '')
+    app.logger.info(f'Searching for city: {query}')
+    
+    if not query or len(query) < 2:
+        return jsonify([])
+    
+    try:
+        # Search cities with population > 1000
+        url = 'http://api.geonames.org/searchJSON'
+        params = {
+            'q': query,
+            'maxRows': 10,
+            'featureClass': 'P',
+            'cities': 'cities1000',
+            'username': GEONAMES_USERNAME
+        }
+        app.logger.info(f'Making request to GeoNames API: {url} with params: {params}')
+        
+        response = requests.get(url, params=params)
+        app.logger.info(f'GeoNames API response status: {response.status_code}')
+        
+        if response.status_code != 200:
+            app.logger.error(f'GeoNames API error: {response.text}')
+            return jsonify({'error': 'Error fetching cities. Please try again.'}), 500
+        
+        data = response.json()
+        app.logger.info(f'GeoNames API response data: {data}')
+        
+        cities = []
+        for result in data.get('geonames', []):
+            cities.append({
+                'id': result['geonameId'],
+                'city': result['name'],
+                'country': result['countryName'],
+                'country_code': result['countryCode'],
+                'label': f"{result['name']}, {result['countryName']}"
+            })
+        
+        app.logger.info(f'Returning {len(cities)} cities')
+        return jsonify(cities)
+    except Exception as e:
+        app.logger.error(f'Error searching cities: {str(e)}')
+        return jsonify({'error': 'Error fetching cities. Please try again.'}), 500
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -105,11 +168,12 @@ class TestInvitation(db.Model):
 
 @app.route('/')
 def index():
-    if current_user.is_authenticated:
-        if current_user.role == 'admin':
-            return redirect(url_for('admin_dashboard'))
-        return redirect(url_for('view_competitions'))
     return render_template('landing.html')
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -609,13 +673,60 @@ def view_results_list():
     competitions = Competition.query.filter_by(status='completed').all()
     return render_template('results_list.html', competitions=competitions)
 
-@app.route('/register', methods=['GET'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    token = request.args.get('token')
-    if token:
-        invitation = TestInvitation.query.filter_by(token=token, used=False).first()
-        if invitation and invitation.expires_at > datetime.utcnow():
-            return render_template('register.html', email=invitation.email, token=token)
+    if request.method == 'POST':
+        # Get form data
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        phone = request.form.get('phone')
+        date_of_birth = request.form.get('date_of_birth')
+        city = request.form.get('city')
+        city_id = request.form.get('city_id')
+        country = request.form.get('country')
+        country_code = request.form.get('country_code')
+
+        # Validate required fields
+        if not all([first_name, last_name, email, password, date_of_birth, city, country]):
+            flash('All required fields must be filled', 'danger')
+            return render_template('register.html')
+
+        # Check if email already exists
+        if User.query.filter_by(email=email).first():
+            flash('Email already exists', 'danger')
+            return render_template('register.html')
+
+        # Create new user
+        user = User(
+            username=email,  # Using email as username
+            email=email,
+            password=generate_password_hash(password),
+            role='dancer',  # Default role
+            city=city,
+            city_id=city_id,
+            country=country,
+            country_code=country_code,
+            is_active=True
+        )
+        db.session.add(user)
+        db.session.commit()
+
+        # Create dancer profile
+        dancer = Dancer(
+            user_id=user.id,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
+            date_of_birth=datetime.strptime(date_of_birth, '%Y-%m-%d').date()
+        )
+        db.session.add(dancer)
+        db.session.commit()
+
+        flash('Registration successful! Please log in.', 'success')
+        return redirect(url_for('login'))
+
     return render_template('register.html')
 
 @app.route('/login/google')

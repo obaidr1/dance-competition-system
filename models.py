@@ -10,6 +10,10 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=True)  # Made nullable for initial creation
     role = db.Column(db.String(20), nullable=False)  # admin, judge, dancer
+    city = db.Column(db.String(100), nullable=True)
+    city_id = db.Column(db.Integer, nullable=True)  # GeoNames city ID
+    country = db.Column(db.String(100), nullable=True)
+    country_code = db.Column(db.String(2), nullable=True)  # ISO country code
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     password_reset_token = db.Column(db.String(100), unique=True)
     password_reset_expiration = db.Column(db.DateTime)

@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 
+{% block header_title %}Register as a Dancer{% endblock %}
+
 {% block content %}
-<div class="container">
+<div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
@@ -27,6 +29,16 @@
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" name="email" required>
                             <div class="form-text">This will be used as your login username</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="location">City & Country</label>
+                            <input type="text" class="form-control" id="location" placeholder="Start typing your city..." required>
+                            <input type="hidden" id="city" name="city">
+                            <input type="hidden" id="city_id" name="city_id">
+                            <input type="hidden" id="country" name="country">
+                            <input type="hidden" id="country_code" name="country_code">
+                            <div id="citySearchStatus" class="form-text text-muted"></div>
                         </div>
                         
                         <div class="mb-3">
@@ -60,22 +72,78 @@
     </div>
 </div>
 
+<script>
+$(document).ready(function() {
+    console.log('Document ready');
+    
+    $("#location").on('focus', function() {
+        console.log('Location field focused');
+    });
+    
+    $("#location").autocomplete({
+        source: function(request, response) {
+            console.log('Searching for:', request.term);
+            $('#citySearchStatus').text('Searching...');
+            
+            $.getJSON("/api/search-cities", {
+                q: request.term
+            })
+            .done(function(data) {
+                console.log('Received data:', data);
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    $('#citySearchStatus').text('Error: ' + data.error);
+                    alert(data.error);
+                    response([]);
+                } else {
+                    $('#citySearchStatus').text('Found ' + data.length + ' cities');
+                    response(data.map(function(item) {
+                        return {
+                            label: item.label,
+                            value: item.label,
+                            city: item.city,
+                            city_id: item.id,
+                            country: item.country,
+                            country_code: item.country_code
+                        };
+                    }));
+                }
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.error('AJAX error:', textStatus, errorThrown);
+                $('#citySearchStatus').text('Error fetching cities');
+                alert("Error fetching cities. Please try again.");
+                response([]);
+            });
+        },
+        minLength: 2,
+        select: function(event, ui) {
+            console.log('Selected:', ui.item);
+            $("#city").val(ui.item.city);
+            $("#city_id").val(ui.item.city_id);
+            $("#country").val(ui.item.country);
+            $("#country_code").val(ui.item.country_code);
+            $('#citySearchStatus').text('Selected: ' + ui.item.label);
+        }
+    });
+});
+</script>
+
 <style>
-    .card {
-        border: none;
-        box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    }
-    .card-header {
-        background: linear-gradient(45deg, #2c3e50, #3498db);
-        color: white;
-        padding: 1.5rem;
-    }
-    .btn-primary {
-        background: linear-gradient(45deg, #2c3e50, #3498db);
-        border: none;
-    }
-    .btn-primary:hover {
-        background: linear-gradient(45deg, #3498db, #2c3e50);
-    }
+.ui-autocomplete {
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.ui-menu-item {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+.ui-state-active,
+.ui-widget-content .ui-state-active {
+    border: 1px solid #007bff;
+    background: #007bff;
+    color: white;
+}
 </style>
 {% endblock %}
