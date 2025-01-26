@@ -1,36 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="login-container">
-    <div class="login-card">
-        <h1 class="login-title">Login</h1>
-        
-        <form method="POST" action="{{ url_for('login') }}">
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card bg-dark text-light">
+                <div class="card-body">
+                    <h3 class="text-center mb-4">Login</h3>
+                    
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <div class="alert alert-danger">
+                                {{ messages[0] }}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                    <div class="text-center mt-3">
+                        <span>Don't have an account?</span>
+                        <a href="{{ url_for('register') }}" class="text-primary">Register here</a>
+                    </div>
+                </div>
             </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">Login</button>
-        </form>
-
-        <div class="divider">
-            <span>or</span>
-        </div>
-
-        <a href="{{ url_for('google_login') }}" class="btn btn-google w-100">
-            <img src="{{ url_for('static', filename='img/google-logo.png') }}" alt="Google logo" class="google-logo">
-            Continue with Google
-        </a>
-            
-        <div class="text-center mt-3">
-            <span class="text-secondary">Don't have an account?</span>
-            <a href="{{ url_for('register') }}" class="register-link">Register here</a>
         </div>
     </div>
 </div>

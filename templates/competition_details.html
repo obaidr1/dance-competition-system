@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Complete Competition Details</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="banner" class="form-label">Competition Banner</label>
+                            <input type="file" class="form-control" id="banner" name="banner" accept="image/*" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price (€)</label>
+                            <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="dance_style" class="form-label">Dance Style</label>
+                            <select class="form-control" id="dance_style" name="dance_style" required>
+                                <option value="">Select dance style</option>
+                                <option value="Bachata">Bachata</option>
+                                <option value="Salsa">Salsa</option>
+                                <option value="Zouk">Zouk</option>
+                                <option value="West Coast Swing">West Coast Swing</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Create Competition</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

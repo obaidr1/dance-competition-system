@@ -1,45 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dance Competition System - Streamline Your Jack & Jill Competitions</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">
-                <h1>DanceComp</h1>
-            </div>
-            <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#how-it-works">How It Works</a>
-                <a href="#testimonials">Testimonials</a>
-                <a href="#pricing">Pricing</a>
-                <a href="#faq">FAQ</a>
-            </div>
-            <div class="auth-buttons">
-                <a href="{{ url_for('login') }}" class="btn btn-outline">Login</a>
-                <a href="{{ url_for('register') }}" class="btn btn-primary">Sign Up</a>
-            </div>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
+{% block content %}
+<div class="landing-page">
     <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Streamline Your Jack & Jill Competitions</h1>
-            <p>From managing dancers to live scoring, our tool has everything you need to run a smooth and professional competition.</p>
-            <div class="hero-buttons">
-                <a href="{{ url_for('register') }}" class="btn btn-primary btn-large">Get Started for Free</a>
-                <a href="#features" class="btn btn-outline btn-large">Explore Features</a>
+    <div class="hero-section text-center py-5">
+        <div class="container">
+            <h1 class="display-4 mb-4">DanceComp</h1>
+            
+            <!-- Main Navigation Menu -->
+            <div class="main-menu mb-5">
+                <nav class="nav flex-column align-items-center">
+                    <a class="nav-link" href="#features">Features</a>
+                    <a class="nav-link" href="#how-it-works">How It Works</a>
+                    <a class="nav-link" href="#testimonials">Testimonials</a>
+                    <a class="nav-link" href="#pricing">Pricing</a>
+                    <a class="nav-link" href="#faq">FAQ</a>
+                </nav>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons d-flex flex-column flex-md-row justify-content-center gap-3 mb-5">
+                <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Sign Up</a>
+                <a href="{{ url_for('admin_login') }}" class="btn btn-outline-primary btn-lg">Admin Login</a>
+            </div>
+
+            <!-- Hero Content -->
+            <div class="hero-content text-center mb-5">
+                <h2 class="h3 mb-4">Organize Your Dance Competitions</h2>
+                <p class="lead mb-4">
+                    From managing dancers to live scoring, our tool has everything you need to run a smooth and professional competition.
+                </p>
+                <div class="cta-buttons d-flex flex-column flex-md-row justify-content-center gap-3">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get Started for Free</a>
+                    <a href="#features" class="btn btn-outline-light btn-lg">Explore Features</a>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
 
     <!-- Features Section -->
     <section id="features" class="features">
@@ -242,26 +240,91 @@
         </div>
     </footer>
 
-    <script>
-        // Smooth scrolling for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
+    <style>
+    .landing-page {
+        min-height: calc(100vh - 56px);
+        display: flex;
+        flex-direction: column;
+        background-color: var(--primary-bg);
+    }
 
-        // Sticky navigation
-        window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 0) {
-                navbar.classList.add('sticky');
-            } else {
-                navbar.classList.remove('sticky');
-            }
-        });
-    </script>
-</body>
-</html>
+    .hero-section {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        padding: 2rem 1rem;
+    }
+
+    .main-menu {
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    .main-menu .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+        width: 100%;
+        text-align: center;
+    }
+
+    .main-menu .nav-link:hover {
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .action-buttons .btn,
+    .cta-buttons .btn {
+        min-width: 160px;
+    }
+
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 1rem;
+        }
+
+        .display-4 {
+            font-size: 2.5rem;
+        }
+
+        .lead {
+            font-size: 1.1rem;
+        }
+
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+    }
+
+    /* Animation */
+    .main-menu .nav-link {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .main-menu .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background-color: #0d6efd;
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .main-menu .nav-link:hover::after {
+        width: 80%;
+    }
+
+    /* Smooth scroll behavior */
+    html {
+        scroll-behavior: smooth;
+    }
+    </style>
+</div>
+{% endblock %}

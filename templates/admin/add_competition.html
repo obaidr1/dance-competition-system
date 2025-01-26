@@ -18,9 +18,23 @@
                             <label for="date" class="form-label">Date</label>
                             <input type="date" class="form-control" id="date" name="date" required>
                         </div>
+                        <div class="mb-3">
+                            <label for="dance_style" class="form-label">Dance Style</label>
+                            <select class="form-select" id="dance_style" name="dance_style" required>
+                                <option value="" selected disabled>Select a dance style</option>
+                                <option value="West Coast Swing">West Coast Swing</option>
+                                <option value="Lindy Hop">Lindy Hop</option>
+                                <option value="Salsa">Salsa</option>
+                                <option value="Zouk">Zouk</option>
+                                <option value="Hustle">Hustle</option>
+                                <option value="Kizomba">Kizomba</option>
+                                <option value="Bachata">Bachata</option>
+                                <option value="Urban Kiz">Urban Kiz</option>
+                            </select>
+                        </div>
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">Create Competition</button>
-                            <a href="{{ url_for('list_competitions') }}" class="btn btn-secondary">Cancel</a>
+                            <a href="{{ url_for('view_competitions') }}" class="btn btn-secondary">Cancel</a>
                         </div>
                     </form>
                 </div>

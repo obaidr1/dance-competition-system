@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row g-4">
+        <!-- Left Navigation Column -->
+        <div class="col-12 col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Navigation</h5>
+                    <div class="list-group">
+                        <a href="{{ url_for('user_dashboard') }}" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-home me-2"></i>Dashboard
+                        </a>
+                        <a href="{{ url_for('view_competitions') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-trophy me-2"></i>All Competitions
+                        </a>
+                        <a href="{{ url_for('profile') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-circle me-2"></i>Profile Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Content Column -->
+        <div class="col-12 col-md-6">
+            <!-- Stats Cards -->
+            <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2">Last Event</h6>
+                            <h5 class="card-title">
+                                {% if user.last_event %}
+                                    {{ user.last_event.name }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2">Last Position</h6>
+                            <h5 class="card-title">
+                                {% if user.last_position %}
+                                    {{ user.last_position }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2">Events Participated</h6>
+                            <h5 class="card-title">
+                                {% if user.events_count %}
+                                    {{ user.events_count }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events List -->
+            <div class="card">
+                <div class="card-body">
+                    {% if registered_competitions %}
+                    <h5 class="card-title mb-4 text-light">Your Registered Competitions</h5>
+                    <div class="row row-cols-1 row-cols-md-1 g-4 mb-4">
+                        {% for competition in registered_competitions %}
+                        <div class="col">
+                            <div class="card bg-dark mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ competition.name }}</h5>
+                                    <div class="card-text">
+                                        <p class="mb-1">
+                                            <i class="far fa-calendar-alt me-2"></i>
+                                            {{ competition.date.strftime('%B %d, %Y') }}
+                                        </p>
+                                        <p class="mb-1">
+                                            <i class="fas fa-map-marker-alt me-2"></i>
+                                            {{ competition.city }}
+                                        </p>
+                                        <p class="mb-2">
+                                            <i class="fas fa-users me-2"></i>
+                                            {{ competition.users|length }} registered
+                                        </p>
+                                        {% if competition.registration_open %}
+                                            <div class="competition-status">Registration Open</div>
+                                        {% else %}
+                                            <div class="competition-status closed">Registration Closed</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="competition-actions mt-3">
+                                        <a href="{{ url_for('competition_info', competition_id=competition.id) }}" 
+                                           class="btn btn-primary">
+                                            <i class="fas fa-info-circle"></i>More Info
+                                        </a>
+                                        {% if current_user in competition.users %}
+                                            <button class="btn btn-secondary" disabled>
+                                                <i class="fas fa-check"></i>Registered
+                                            </button>
+                                        {% else %}
+                                            <a href="{{ url_for('join_competition', competition_id=competition.id) }}" 
+                                               class="btn btn-success {% if not competition.registration_open %}disabled{% endif %}">
+                                                <i class="fas fa-plus"></i>Register
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <h5 class="card-title mb-4 mt-5 text-light">Available Competitions</h5>
+                    <div class="row row-cols-1 row-cols-md-1 g-4">
+                        {% if available_competitions %}
+                            {% for competition in available_competitions %}
+                            <div class="col">
+                                <div class="card bg-dark mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ competition.name }}</h5>
+                                        <div class="card-text">
+                                            <p class="mb-1">
+                                                <i class="far fa-calendar-alt me-2"></i>
+                                                {{ competition.date.strftime('%B %d, %Y') }}
+                                            </p>
+                                            <p class="mb-1">
+                                                <i class="fas fa-map-marker-alt me-2"></i>
+                                                {{ competition.city }}
+                                            </p>
+                                            <p class="mb-2">
+                                                <i class="fas fa-users me-2"></i>
+                                                {{ competition.users|length }} registered
+                                            </p>
+                                            {% if competition.registration_open %}
+                                                <div class="competition-status">Registration Open</div>
+                                            {% else %}
+                                                <div class="competition-status closed">Registration Closed</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="competition-actions mt-3">
+                                            <a href="{{ url_for('competition_info', competition_id=competition.id) }}" 
+                                               class="btn btn-primary">
+                                                <i class="fas fa-info-circle"></i>More Info
+                                            </a>
+                                            {% if current_user in competition.users %}
+                                                <button class="btn btn-secondary" disabled>
+                                                    <i class="fas fa-check"></i>Registered
+                                                </button>
+                                            {% else %}
+                                                <a href="{{ url_for('join_competition', competition_id=competition.id) }}" 
+                                                   class="btn btn-success {% if not competition.registration_open %}disabled{% endif %}">
+                                                    <i class="fas fa-plus"></i>Register
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-light">No available competitions at the moment.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Profile Column -->
+        <div class="col-12 col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename='uploads/' + user.profile_picture) if user.profile_picture else 'https://media.istockphoto.com/id/2160495405/de/vektor/vector-flat-illustration-in-grayscale-avatar-user-profile-person-icon-gender-neutral.jpg' }}" 
+                             class="rounded-circle profile-picture mb-3" 
+                             alt="Profile Picture">
+                        <h5 class="card-title mb-0">{{ user.first_name }} {{ user.last_name }}</h5>
+                    </div>
+
+                    <div class="user-info">
+                        {% for field in [
+                            ('Age', user.age, 'birthday'),
+                            ('City', user.city, 'map-marker-alt'),
+                            ('Instagram', user.instagram, 'instagram'),
+                            ('Email', user.email, 'envelope')
+                        ] %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="text-light">{{ field[0] }}</div>
+                                {% if field[0] != 'Email' %}
+                                <button class="btn btn-link btn-sm p-0 edit-field" 
+                                        data-field="{{ field[0].lower() }}">
+                                    <i class="fas fa-pen text-light"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex align-items-center">
+                                {% if field[0] == 'Email' %}
+                                    <i class="fas fa-{{ field[2] }} me-2 text-light"></i>
+                                    <span class="text-light">{{ field[1] }}</span>
+                                {% elif field[0] == 'Instagram' %}
+                                    <i class="fab fa-{{ field[2] }} me-2 text-light"></i>
+                                    <span class="text-light">{{ field[1] or 'Not set' }}</span>
+                                {% elif field[0] == 'City' %}
+                                    <i class="fas fa-{{ field[2] }} me-2 text-light"></i>
+                                    <span class="text-light">{{ field[1] or 'Not set' }}</span>
+                                {% else %}
+                                    <span class="text-light">{{ field[1] or 'Not set' }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-picture {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.competition-banner {
+    height: 200px;
+    object-fit: cover;
+}
+
+@media (max-width: 576px) {
+    .competition-banner {
+        height: 150px;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .d-flex.gap-2 {
+        width: 100%;
+    }
+}
+
+.card {
+    background-color: #2d2d2d;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.list-group-item {
+    background-color: transparent;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.list-group-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.list-group-item.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.text-muted {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+</style>
+
+{% endblock %}

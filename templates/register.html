@@ -5,127 +5,112 @@
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="text-center mb-0">
-                        <i class="fas fa-user-plus me-2"></i>Register as a Dancer
-                    </h3>
-                </div>
+        <div class="col-md-6">
+            <div class="card bg-dark text-light">
                 <div class="card-body">
-                    <form method="POST">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="first_name" class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                    <div class="d-flex align-items-center justify-content-center mb-4">
+                        <i class="fas fa-user-plus me-2"></i>
+                        <h3 class="card-title mb-0">Register</h3>
+                    </div>
+
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <div class="alert alert-danger">
+                                {{ messages[0] }}
                             </div>
-                            <div class="col-md-6">
-                                <label for="last_name" class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="last_name" name="last_name" required>
-                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
                         </div>
-                        
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" name="email" required>
-                            <div class="form-text">This will be used as your login username</div>
+                            <small class="form-text text-light opacity-75">This will be used as your login username</small>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="location">City & Country</label>
-                            <input type="text" class="form-control" id="location" placeholder="Start typing your city..." required>
-                            <input type="hidden" id="city" name="city">
-                            <input type="hidden" id="city_id" name="city_id">
-                            <input type="hidden" id="country" name="country">
-                            <input type="hidden" id="country_code" name="country_code">
-                            <div id="citySearchStatus" class="form-text text-muted"></div>
-                        </div>
-                        
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
-                        
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text" class="form-control" id="city" name="city" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="country" class="form-label">Country</label>
+                            <input type="text" class="form-control" id="country" name="country" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="level" class="form-label">Dance Level</label>
+                            <select class="form-select" id="level" name="level" required>
+                                <option value="">Select your level</option>
+                                <option value="Newcomer">Newcomer</option>
+                                <option value="Novice">Novice</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                                <option value="AllStar">All Star</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dance_role" class="form-label">Dance Role</label>
+                            <select class="form-select" id="dance_role" name="dance_role" required>
+                                <option value="">Select a role</option>
+                                <option value="leader">Leader</option>
+                                <option value="follower">Follower</option>
+                            </select>
+                        </div>
                         <div class="mb-3">
                             <label for="phone" class="form-label">Phone Number</label>
                             <input type="tel" class="form-control" id="phone" name="phone">
-                            <div class="form-text">Optional, but useful for competition updates</div>
+                            <small class="form-text text-light opacity-75">Optional, but useful for competition updates</small>
                         </div>
-                        
                         <div class="mb-3">
                             <label for="date_of_birth" class="form-label">Date of Birth</label>
                             <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required>
                         </div>
-                        
+                        <div class="mb-3">
+                            <label for="profile_picture" class="form-label">Profile Picture</label>
+                            <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
+                            <small class="form-text text-light opacity-75">Optional: Upload a profile picture</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="instagram" class="form-label">Instagram Profile</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@</span>
+                                <input type="text" class="form-control" id="instagram" name="instagram" placeholder="username">
+                            </div>
+                            <small class="form-text text-light opacity-75">Optional: Your Instagram username</small>
+                        </div>
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-user-plus me-2"></i>Register
                             </button>
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-light">
+                                Already have an account? Login
+                            </a>
                         </div>
                     </form>
-                </div>
-                <div class="card-footer text-center">
-                    <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
 <script>
 $(document).ready(function() {
     console.log('Document ready');
-    
-    $("#location").on('focus', function() {
-        console.log('Location field focused');
-    });
-    
-    $("#location").autocomplete({
-        source: function(request, response) {
-            console.log('Searching for:', request.term);
-            $('#citySearchStatus').text('Searching...');
-            
-            $.getJSON("/api/search-cities", {
-                q: request.term
-            })
-            .done(function(data) {
-                console.log('Received data:', data);
-                if (data.error) {
-                    console.error('Error:', data.error);
-                    $('#citySearchStatus').text('Error: ' + data.error);
-                    alert(data.error);
-                    response([]);
-                } else {
-                    $('#citySearchStatus').text('Found ' + data.length + ' cities');
-                    response(data.map(function(item) {
-                        return {
-                            label: item.label,
-                            value: item.label,
-                            city: item.city,
-                            city_id: item.id,
-                            country: item.country,
-                            country_code: item.country_code
-                        };
-                    }));
-                }
-            })
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                console.error('AJAX error:', textStatus, errorThrown);
-                $('#citySearchStatus').text('Error fetching cities');
-                alert("Error fetching cities. Please try again.");
-                response([]);
-            });
-        },
-        minLength: 2,
-        select: function(event, ui) {
-            console.log('Selected:', ui.item);
-            $("#city").val(ui.item.city);
-            $("#city_id").val(ui.item.city_id);
-            $("#country").val(ui.item.country);
-            $("#country_code").val(ui.item.country_code);
-            $('#citySearchStatus').text('Selected: ' + ui.item.label);
-        }
-    });
 });
 </script>
 
@@ -146,4 +131,3 @@ $(document).ready(function() {
     color: white;
 }
 </style>
-{% endblock %}

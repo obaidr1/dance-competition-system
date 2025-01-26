@@ -1,43 +1,39 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h2>Manage Competitions</h2>
-    
-    <!-- Add Competition Form -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h3>Add New Competition</h3>
-        </div>
-        <div class="card-body">
-            <form method="POST">
-                <div class="mb-3">
-                    <label for="name" class="form-label">Competition Name</label>
-                    <input type="text" class="form-control" id="name" name="name" required>
-                </div>
-                <div class="mb-3">
-                    <label for="date" class="form-label">Date</label>
-                    <input type="date" class="form-control" id="date" name="date" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Create Competition</button>
-            </form>
-        </div>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Manage Competitions</h1>
+        <a href="{{ url_for('admin_create_competition') }}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Create New Competition
+        </a>
     </div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <!-- List of Competitions -->
-    <div class="card">
-        <div class="card-header">
-            <h3>Existing Competitions</h3>
-        </div>
+    <div class="card shadow-sm">
         <div class="card-body">
+            {% if competitions %}
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th>Date</th>
+                            <th>Location</th>
+                            <th>Dance Style</th>
+                            <th>Price</th>
                             <th>Status</th>
-                            <th>Registration</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -45,35 +41,48 @@
                         {% for competition in competitions %}
                         <tr>
                             <td>{{ competition.name }}</td>
-                            <td>{{ competition.date.strftime('%Y-%m-%d') }}</td>
-                            <td>{{ competition.status }}</td>
-                            <td>{{ 'Open' if competition.registration_open else 'Closed' }}</td>
+                            <td>{{ competition.date.strftime('%B %d, %Y') }}</td>
+                            <td>{{ competition.city }}</td>
+                            <td>{{ competition.dance_style }}</td>
+                            <td>€{{ "%.2f"|format(competition.price) }}</td>
                             <td>
-                                <a href="{{ url_for('manage_competition_dancers', competition_id=competition.id) }}" 
-                                   class="btn btn-sm btn-primary">Manage Dancers</a>
-                                <a href="{{ url_for('manage_competition_judges', competition_id=competition.id) }}" 
-                                   class="btn btn-sm btn-info">Manage Judges</a>
-                                <a href="{{ url_for('view_results', competition_id=competition.id) }}" 
-                                   class="btn btn-sm btn-secondary">View Results</a>
-                                {% if competition.registration_open %}
-                                <form method="POST" action="{{ url_for('toggle_registration', competition_id=competition.id) }}" 
-                                      style="display: inline;">
-                                    <button type="submit" class="btn btn-sm btn-warning">Close Registration</button>
-                                </form>
-                                {% else %}
-                                <form method="POST" action="{{ url_for('toggle_registration', competition_id=competition.id) }}" 
-                                      style="display: inline;">
-                                    <button type="submit" class="btn btn-sm btn-success">Open Registration</button>
-                                </form>
-                                {% endif %}
+                                <span class="badge bg-{{ 'success' if competition.registration_open else 'danger' }}">
+                                    {{ 'Open' if competition.registration_open else 'Closed' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('admin_edit_competition', competition_id=competition.id) }}" 
+                                       class="btn btn-sm btn-primary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('manage_competition_dancers', competition_id=competition.id) }}" 
+                                       class="btn btn-sm btn-info" title="Manage Dancers">
+                                        <i class="fas fa-users"></i>
+                                    </a>
+                                    <a href="{{ url_for('manage_competition_judges', competition_id=competition.id) }}" 
+                                       class="btn btn-sm btn-warning" title="Manage Judges">
+                                        <i class="fas fa-gavel"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('admin_toggle_registration', competition_id=competition.id) }}" 
+                                          style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-{{ 'danger' if competition.registration_open else 'success' }}"
+                                                title="{{ 'Close' if competition.registration_open else 'Open' }} Registration">
+                                            <i class="fas fa-{{ 'lock' if competition.registration_open else 'lock-open' }}"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            {% if not competitions %}
-            <div class="alert alert-info">No competitions found.</div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>No competitions found.
+                <a href="{{ url_for('admin_create_competition') }}" class="alert-link">Create your first competition</a>
+            </div>
             {% endif %}
         </div>
     </div>

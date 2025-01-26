@@ -5,96 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dance Competition System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <a href="{{ url_for('index') }}" class="text-white text-decoration-none">
-                <h4 class="mb-0"><i class="fas fa-music me-2"></i>Dance Competition</h4>
+<body class="bg-dark text-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary">
+        <div class="container-fluid">
+            <!-- Brand -->
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <i class="fas fa-music me-2"></i>
+                Dance Competition
             </a>
-        </div>
-        <div class="sidebar-user">
-            {% if current_user.is_authenticated %}
-                <div class="d-flex align-items-center">
-                    <img src="{{ url_for('static', filename='img/default-avatar.png') }}" alt="User avatar" class="me-3">
-                    <div>
-                        <h6 class="mb-0">{{ current_user.username }}</h6>
-                        <small class="text-secondary">{{ current_user.role.title() }}</small>
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-        
-        <ul class="sidebar-menu">
-            {% if current_user.is_authenticated %}
-                {% if current_user.role == 'admin' %}
-                    <li>
-                        <a href="{{ url_for('admin_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_dashboard' }}">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('list_competitions') }}" class="{{ 'active' if request.endpoint == 'list_competitions' }}">
-                            <i class="fas fa-trophy"></i> Competitions
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('list_dancers') }}" class="{{ 'active' if request.endpoint == 'list_dancers' }}">
-                            <i class="fas fa-users"></i> Dancers
-                        </a>
-                    </li>
-                {% else %}
-                    <li>
-                        <a href="{{ url_for('view_competitions') }}" class="{{ 'active' if request.endpoint == 'view_competitions' }}">
-                            <i class="fas fa-trophy"></i> Competitions
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('view_results_list') }}" class="{{ 'active' if request.endpoint == 'view_results_list' }}">
-                            <i class="fas fa-star"></i> Results
-                        </a>
-                    </li>
-                {% endif %}
-            {% endif %}
-        </ul>
-    </div>
 
-    <!-- Top Header -->
-    <div class="top-header">
-        <div class="header-title">
-            <a href="{{ url_for('index') }}" class="text-white text-decoration-none">
-                {% block header_title %}Dance Competition System{% endblock %}
-            </a>
-        </div>
-        <div class="header-actions">
-            {% if current_user.is_authenticated %}
-                <div class="d-flex align-items-center">
-                    {% if current_user.role == 'admin' %}
-                        <span class="badge bg-success me-3">Admin</span>
+            <!-- Hamburger Menu Button -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Collapsible Content -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <!-- Left-aligned menu items -->
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('user_dashboard') }}">
+                                <i class="fas fa-home me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('view_competitions') }}">
+                                <i class="fas fa-trophy me-2"></i>Competitions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('view_results_list') }}">
+                                <i class="fas fa-medal me-2"></i>Results
+                            </a>
+                        </li>
                     {% endif %}
-                    <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </div>
-            {% else %}
-                <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm me-2">
-                    <i class="fas fa-sign-in-alt"></i> User Login
-                </a>
-                <a href="{{ url_for('admin_login') }}" class="btn btn-outline-light btn-sm">
-                    <i class="fas fa-user-shield"></i> Admin Login
-                </a>
-            {% endif %}
+                </ul>
+
+                <!-- Right-aligned items -->
+                <ul class="navbar-nav d-flex flex-row">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                {% if current_user.profile_picture %}
+                                    <img src="{{ url_for('static', filename='uploads/' + current_user.profile_picture) }}" 
+                                         class="nav-profile-pic me-2" 
+                                         alt="Profile Picture">
+                                {% else %}
+                                    <div class="nav-profile-pic default me-2">
+                                        {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
+                                    </div>
+                                {% endif %}
+                                {{ current_user.first_name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end bg-dark">
+                                <li>
+                                    <a class="dropdown-item text-light" href="{{ url_for('profile') }}">
+                                        <i class="fas fa-user-circle me-2"></i>Profile
+                                    </a>
+                                </li>
+                                {% if current_user.is_admin %}
+                                <li>
+                                    <a class="dropdown-item text-light" href="{{ url_for('admin.dashboard') }}">
+                                        <i class="fas fa-cog me-2"></i>Admin Panel
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider bg-secondary"></li>
+                                <li>
+                                    <a class="dropdown-item text-light" href="{{ url_for('logout') }}">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item me-3">
+                            <a class="btn btn-outline-primary" href="{{ url_for('login') }}">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </a>
+                        </li>
+                        <li class="nav-item me-3">
+                            <a class="btn btn-primary" href="{{ url_for('register') }}">
+                                <i class="fas fa-user-plus me-2"></i>Sign Up
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-secondary" href="{{ url_for('admin_login') }}">
+                                <i class="fas fa-user-shield me-2"></i>Admin
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
-    </div>
+    </nav>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <main class="content-wrapper">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -105,9 +117,22 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-
+        
         {% block content %}{% endblock %}
-    </div>
+    </main>
 
+    <!-- Footer -->
+    <footer class="footer bg-dark text-light py-4 mt-auto">
+        <div class="container">
+            <div class="text-center">
+                <p>&copy; 2024 Dance Competition System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>Competitions</h2>
+            <div class="row">
+                {% for competition in competitions %}
+                <div class="col-md-12 mb-4">
+                    <div class="card">
+                        {% if competition.banner %}
+                        <img src="{{ url_for('static', filename=competition.banner) }}" class="card-img-top" alt="{{ competition.name }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ competition.name }}</h5>
+                            <p class="card-text">
+                                <strong>Date:</strong> {{ competition.date.strftime('%B %d, %Y') }}<br>
+                                <strong>City:</strong> {{ competition.city }}<br>
+                                <strong>Dance Style:</strong> {{ competition.dance_style }}
+                            </p>
+                            
+                            {% if competition.date < current_time %}
+                                {% if current_user in competition.users %}
+                                    <a href="{{ url_for('view_results', competition_id=competition.id) }}" class="btn btn-primary">View Results</a>
+                                {% endif %}
+                            {% else %}
+                                <a href="{{ url_for('competition_info', competition_id=competition.id) }}" class="btn btn-info">More Info</a>
+                                {% if current_user not in competition.users %}
+                                    <form method="POST" action="{{ url_for('join_competition', competition_id=competition.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-success">Join Competition</button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                            <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Profile</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ current_user.first_name }} {{ current_user.last_name }}</p>
+                    <p><strong>Email:</strong> {{ current_user.email }}</p>
+                    <p><strong>Level:</strong> {{ current_user.level }}</p>
+                    <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Create New Competition</h1>
+        <a href="{{ url_for('admin_competitions') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Competitions
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_create_competition') }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Competition Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="date" name="date" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text" class="form-control" id="city" name="city" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="dance_style" class="form-label">Dance Style</label>
+                            <select class="form-select" id="dance_style" name="dance_style" required>
+                                <option value="">Select a dance style</option>
+                                <option value="Ballroom">Ballroom</option>
+                                <option value="Latin">Latin</option>
+                                <option value="Hip Hop">Hip Hop</option>
+                                <option value="Contemporary">Contemporary</option>
+                                <option value="Jazz">Jazz</option>
+                                <option value="Ballet">Ballet</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Entry Fee (€)</label>
+                            <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="banner" class="form-label">Competition Banner</label>
+                            <input type="file" class="form-control" id="banner" name="banner" accept="image/*">
+                            <div class="form-text">Optional: Upload a banner image for the competition</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Create Competition
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set minimum date to today
+document.getElementById('date').min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

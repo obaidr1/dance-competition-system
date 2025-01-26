@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Complete Competition Details</h2>
+    <form method="POST" action="{{ url_for('complete_competition_details', competition_id=competition.id) }}" enctype="multipart/form-data">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="banner" class="form-label">Banner Image</label>
+                    <input type="file" class="form-control" id="banner" name="banner" accept="image/*" required>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="price" class="form-label">Price</label>
+                    <div class="input-group">
+                        <span class="input-group-text">€</span>
+                        <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="dance_style" class="form-label">Dance Style</label>
+                    <select class="form-select" id="dance_style" name="dance_style" required>
+                        <option value="">Select a dance style</option>
+                        <option value="Bachata">Bachata</option>
+                        <option value="Salsa">Salsa</option>
+                        <option value="Zouk">Zouk</option>
+                        <option value="West Coast Swing">West Coast Swing</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button type="submit" class="btn btn-primary">Create Competition</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -2,29 +2,70 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1>Competitions</h1>
-
-    {% if competitions %}
-    <div class="row">
+    <h1 class="text-light mb-4">Upcoming Competitions</h1>
+    
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for competition in competitions %}
-        <div class="col-md-4 mb-4">
-            <div class="card competition-card">
+        <div class="col">
+            <div class="card h-100">
+                {% if competition.banner %}
+                <a href="{{ url_for('competition_info', competition_id=competition.id) }}" class="competition-image-link">
+                    <img src="{{ url_for('static', filename=competition.banner) }}" 
+                         class="competition-image" 
+                         alt="{{ competition.name }}">
+                </a>
+                {% endif %}
+                
                 <div class="card-body">
-                    <h5 class="card-title">{{ competition.name }}</h5>
-                    <p class="card-text">
-                        <strong>Date:</strong> {{ competition.date.strftime('%Y-%m-%d') }}<br>
-                        <strong>Status:</strong> {{ competition.status }}
-                    </p>
-                    <a href="{{ url_for('view_results', competition_id=competition.id) }}" class="btn btn-primary">View Results</a>
+                    <h5 class="card-title text-light mb-3">{{ competition.name }}</h5>
+                    
+                    <div class="competition-details text-light-muted">
+                        <p class="mb-2">
+                            <i class="fas fa-calendar"></i>
+                            {{ competition.date.strftime('%B %d, %Y') }}
+                        </p>
+                        <p class="mb-2">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ competition.location }}
+                        </p>
+                        <p class="mb-2">
+                            <i class="fas fa-users"></i>
+                            {{ competition.users|length }} registered
+                        </p>
+                    </div>
+                    
+                    {% if competition.registration_open %}
+                    <span class="badge badge-success">Registration Open</span>
+                    {% else %}
+                    <span class="badge badge-danger">Registration Closed</span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer">
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('competition_info', competition_id=competition.id) }}" 
+                           class="btn btn-primary w-100">
+                            <i class="fas fa-info-circle me-2"></i>More Info
+                        </a>
+                        
+                        {% if competition.registration_open and current_user not in competition.users %}
+                        <form action="{{ url_for('join_competition', competition_id=competition.id) }}" 
+                              method="POST" 
+                              class="w-100">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-plus-circle me-2"></i>Join
+                            </button>
+                        </form>
+                        {% elif current_user in competition.users %}
+                        <button class="btn btn-secondary w-100" disabled>
+                            <i class="fas fa-check me-2"></i>Registered
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
-    {% else %}
-    <div class="alert alert-info">
-        No competitions available at the moment.
-    </div>
-    {% endif %}
 </div>
 {% endblock %}

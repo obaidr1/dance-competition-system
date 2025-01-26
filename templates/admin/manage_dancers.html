@@ -3,40 +3,40 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Manage Judges - {{ competition.name }}</h1>
+        <h1>Manage Dancers - {{ competition.name }}</h1>
         <a href="{{ url_for('admin_competitions') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left me-2"></i>Back to Competitions
         </a>
     </div>
 
     <div class="row">
-        <!-- Current Judges -->
+        <!-- Current Dancers -->
         <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-gavel me-2"></i>Assigned Judges
+                        <i class="fas fa-users me-2"></i>Registered Dancers
                     </h5>
                 </div>
                 <div class="card-body">
-                    {% if competition.users|selectattr('role', 'equalto', 'judge')|list %}
+                    {% if competition.users %}
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Name</th>
-                                    <th>Email</th>
+                                    <th>Level</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for user in competition.users if user.role == 'judge' %}
+                                {% for user in competition.users %}
                                 <tr>
                                     <td>{{ user.first_name }} {{ user.last_name }}</td>
-                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.level }}</td>
                                     <td>
-                                        <form method="POST" action="{{ url_for('remove_competition_judge', competition_id=competition.id, user_id=user.id) }}" style="display: inline;">
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to remove this judge?')">
+                                        <form method="POST" action="{{ url_for('remove_competition_dancer', competition_id=competition.id, user_id=user.id) }}" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to remove this dancer?')">
                                                 <i class="fas fa-user-minus"></i>
                                             </button>
                                         </form>
@@ -48,32 +48,32 @@
                     </div>
                     {% else %}
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>No judges assigned yet
+                        <i class="fas fa-info-circle me-2"></i>No dancers registered yet
                     </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Add Judges -->
+        <!-- Add Dancers -->
         <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-user-plus me-2"></i>Add Judge
+                        <i class="fas fa-user-plus me-2"></i>Add Dancers
                     </h5>
                 </div>
                 <div class="card-body">
                     {% if all_users %}
-                    <form method="POST" action="{{ url_for('add_competition_judge', competition_id=competition.id) }}">
+                    <form method="POST" action="{{ url_for('add_competition_dancer', competition_id=competition.id) }}">
                         <div class="mb-3">
-                            <label for="user_id" class="form-label">Select Judge</label>
+                            <label for="user_id" class="form-label">Select Dancer</label>
                             <select class="form-select" id="user_id" name="user_id" required>
-                                <option value="">Choose a judge...</option>
+                                <option value="">Choose a dancer...</option>
                                 {% for user in all_users %}
                                     {% if user not in competition.users %}
                                     <option value="{{ user.id }}">
-                                        {{ user.first_name }} {{ user.last_name }} ({{ user.email }})
+                                        {{ user.first_name }} {{ user.last_name }} ({{ user.level }})
                                     </option>
                                     {% endif %}
                                 {% endfor %}
@@ -81,13 +81,13 @@
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success">
-                                <i class="fas fa-plus me-2"></i>Add Judge
+                                <i class="fas fa-plus me-2"></i>Add Dancer
                             </button>
                         </div>
                     </form>
                     {% else %}
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>No available judges to add
+                        <i class="fas fa-info-circle me-2"></i>No available dancers to add
                     </div>
                     {% endif %}
                 </div>
