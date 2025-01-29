@@ -1,55 +1,73 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h2>Score Dance Pair</h2>
-    
-    <div class="card scoring-form">
-        <div class="card-header">
-            <h3>Scoring Form</h3>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Judge Scoring - {{ competition.name }}</h1>
+        <a href="{{ url_for('judge_competitions') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Competitions
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Round {{ round.round_number }} Scoring</h3>
         </div>
         <div class="card-body">
-            <form method="POST" id="scoring-form-{{ pairing.id }}">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Leader:</strong> {{ pairing.leader.name }}</p>
-                        <p><strong>Follower:</strong> {{ pairing.follower.name }}</p>
-                    </div>
-                </div>
+            {% if round.pairings %}
+                <form method="POST">
+                    {% for pairing in round.pairings %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h4 class="mb-0">Pair #{{ loop.index }}</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h5>Leader</h5>
+                                        <p>{{ pairing.leader.first_name }} {{ pairing.leader.last_name }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Follower</h5>
+                                        <p>{{ pairing.follower.first_name }} {{ pairing.follower.last_name }}</p>
+                                    </div>
+                                </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label for="timing" class="form-label">Timing (1-10)</label>
-                        <input type="number" class="form-control score-input" id="timing" name="timing" 
-                               min="1" max="10" step="0.5" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="technique" class="form-label">Technique (1-10)</label>
-                        <input type="number" class="form-control score-input" id="technique" name="technique" 
-                               min="1" max="10" step="0.5" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="connection" class="form-label">Connection (1-10)</label>
-                        <input type="number" class="form-control score-input" id="connection" name="connection" 
-                               min="1" max="10" step="0.5" required>
-                    </div>
-                </div>
+                                <div class="mb-3">
+                                    <label for="score_{{ pairing.id }}" class="form-label">Score (1-10)</label>
+                                    <input type="number" class="form-control" 
+                                           id="score_{{ pairing.id }}" 
+                                           name="score_{{ pairing.id }}"
+                                           min="1" max="10" step="0.5" required
+                                           value="{{ pairing.scores|selectattr('judge_id', 'equalto', current_user.id)|map(attribute='value')|first|default('') }}">
+                                    <div class="form-text">Score must be between 1 and 10, with 0.5 increments allowed</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
 
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label for="musicality" class="form-label">Musicality (1-10)</label>
-                        <input type="number" class="form-control score-input" id="musicality" name="musicality" 
-                               min="1" max="10" step="0.5" required>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Submit Scores
+                        </button>
                     </div>
-                    <div class="col-md-4">
-                        <label for="presentation" class="form-label">Presentation (1-10)</label>
-                        <input type="number" class="form-control score-input" id="presentation" name="presentation" 
-                               min="1" max="10" step="0.5" required>
-                    </div>
+                </form>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>No dance pairs available for scoring in this round.
                 </div>
-
-                <button type="submit" class="btn btn-primary">Submit Scores</button>
-            </form>
+            {% endif %}
         </div>
     </div>
 </div>

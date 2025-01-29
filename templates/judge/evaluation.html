@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4 bg-dark">
+    <!-- Competition Info -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark border-primary">
+                <div class="card-header bg-primary">
+                    <h3 class="card-title mb-0 text-light">{{ competition.name }}</h3>
+                </div>
+                <div class="card-body text-light">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p class="mb-2">
+                                <i class="far fa-calendar-alt me-2"></i>
+                                {{ competition.date.strftime('%B %d, %Y') }}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-2">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                {{ competition.city }}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-2">
+                                <i class="fas fa-star me-2"></i>
+                                {{ competition.level }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Round Info -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark border-success">
+                <div class="card-header bg-success">
+                    <h4 class="card-title mb-0 text-light">Round {{ competition.current_round }} Evaluation</h4>
+                </div>
+                <div class="card-body text-light">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You are currently evaluating Round {{ competition.current_round }}. 
+                        Please score each dancer on the following criteria.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evaluation Form -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark border-primary">
+                <div class="card-header bg-primary d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0 text-light">Dancer #{{ current_dancer.number }}</h4>
+                    <span class="badge bg-light text-dark">{{ current_dancer.role | title }}</span>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('submit_evaluation', competition_id=competition.id, dancer_id=current_dancer.id) }}" 
+                          method="POST" 
+                          class="evaluation-form">
+                        {{ form.csrf_token }}
+                        
+                        <div class="row g-4">
+                            <!-- Musicality -->
+                            <div class="col-md-6 col-lg-4">
+                                <div class="form-group">
+                                    <label class="form-label text-light">Musicality</label>
+                                    <div class="range-slider">
+                                        <input type="range" 
+                                               class="form-range" 
+                                               name="musicality" 
+                                               min="1" 
+                                               max="10" 
+                                               step="0.5"
+                                               value="5"
+                                               oninput="this.nextElementSibling.value = this.value">
+                                        <output class="text-light">5</output>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Technique -->
+                            <div class="col-md-6 col-lg-4">
+                                <div class="form-group">
+                                    <label class="form-label text-light">Technique</label>
+                                    <div class="range-slider">
+                                        <input type="range" 
+                                               class="form-range" 
+                                               name="technique" 
+                                               min="1" 
+                                               max="10" 
+                                               step="0.5"
+                                               value="5"
+                                               oninput="this.nextElementSibling.value = this.value">
+                                        <output class="text-light">5</output>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Connection -->
+                            <div class="col-md-6 col-lg-4">
+                                <div class="form-group">
+                                    <label class="form-label text-light">Connection</label>
+                                    <div class="range-slider">
+                                        <input type="range" 
+                                               class="form-range" 
+                                               name="connection" 
+                                               min="1" 
+                                               max="10" 
+                                               step="0.5"
+                                               value="5"
+                                               oninput="this.nextElementSibling.value = this.value">
+                                        <output class="text-light">5</output>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Style -->
+                            <div class="col-md-6 col-lg-4">
+                                <div class="form-group">
+                                    <label class="form-label text-light">Style</label>
+                                    <div class="range-slider">
+                                        <input type="range" 
+                                               class="form-range" 
+                                               name="style" 
+                                               min="1" 
+                                               max="10" 
+                                               step="0.5"
+                                               value="5"
+                                               oninput="this.nextElementSibling.value = this.value">
+                                        <output class="text-light">5</output>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Performance -->
+                            <div class="col-md-6 col-lg-4">
+                                <div class="form-group">
+                                    <label class="form-label text-light">Performance</label>
+                                    <div class="range-slider">
+                                        <input type="range" 
+                                               class="form-range" 
+                                               name="performance" 
+                                               min="1" 
+                                               max="10" 
+                                               step="0.5"
+                                               value="5"
+                                               oninput="this.nextElementSibling.value = this.value">
+                                        <output class="text-light">5</output>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label class="form-label text-light">Notes (Optional)</label>
+                                    <textarea class="form-control bg-dark text-light" 
+                                              name="notes" 
+                                              rows="3" 
+                                              placeholder="Add any additional comments here..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Submit Scores
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.range-slider {
+    position: relative;
+    width: 100%;
+}
+
+.range-slider output {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.form-range {
+    width: calc(100% - 40px);
+}
+
+.form-range::-webkit-slider-thumb {
+    background: #0d6efd;
+}
+
+.form-range::-moz-range-thumb {
+    background: #0d6efd;
+}
+
+.form-range::-ms-thumb {
+    background: #0d6efd;
+}
+
+.card {
+    margin-bottom: 1.5rem;
+}
+
+.bg-dark {
+    background-color: #1a1a1a !important;
+}
+
+.card.bg-dark {
+    border-color: #2d2d2d;
+}
+
+.form-control.bg-dark {
+    border-color: #2d2d2d;
+}
+
+.form-control.bg-dark:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.alert-info {
+    background-color: rgba(13, 202, 240, 0.2);
+    border-color: rgba(13, 202, 240, 0.3);
+    color: #0dcaf0;
+}
+</style>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.evaluation-form');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Confirm submission
+        if (confirm('Are you sure you want to submit these scores? This action cannot be undone.')) {
+            this.submit();
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

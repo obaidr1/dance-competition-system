@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4 bg-dark">
+    <!-- Judge Banner -->
+    <div class="judge-banner mb-5">
+        <div class="text-center py-5">
+            <h1 class="display-4 text-light mb-3">Judge Dashboard</h1>
+            <p class="lead text-light mb-0">Evaluate performances and submit scores</p>
+        </div>
+    </div>
+
+    <!-- Active Competitions -->
+    <h2 class="text-light mb-4">Active Competitions</h2>
+    <div class="row g-4 mb-5">
+        {% for competition in competitions %}
+        {% if competition.is_started and not competition.is_completed %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card bg-dark border-success h-100">
+                <div class="card-header bg-success">
+                    <h5 class="card-title mb-0 text-light">{{ competition.name }}</h5>
+                    <span class="badge bg-warning text-dark">In Progress</span>
+                </div>
+                <div class="card-body text-light">
+                    <p class="mb-2">
+                        <i class="far fa-calendar-alt me-2"></i>
+                        {{ competition.date.strftime('%B %d, %Y') }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ competition.city }}
+                    </p>
+                    <p class="mb-3">
+                        <i class="fas fa-star me-2"></i>
+                        {{ competition.level }}
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('judge_evaluation', competition_id=competition.id) }}" 
+                           class="btn btn-success">
+                            <i class="fas fa-clipboard-list me-2"></i>Start Evaluation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Upcoming Assignments -->
+    <h2 class="text-light mb-4">Upcoming Assignments</h2>
+    <div class="row g-4 mb-5">
+        {% for competition in competitions %}
+        {% if not competition.is_started and not competition.is_completed %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card bg-dark border-primary h-100">
+                <div class="card-header bg-primary">
+                    <h5 class="card-title mb-0 text-light">{{ competition.name }}</h5>
+                </div>
+                <div class="card-body text-light">
+                    <p class="mb-2">
+                        <i class="far fa-calendar-alt me-2"></i>
+                        {{ competition.date.strftime('%B %d, %Y') }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ competition.city }}
+                    </p>
+                    <p class="mb-3">
+                        <i class="fas fa-star me-2"></i>
+                        {{ competition.level }}
+                    </p>
+                    <div class="d-grid">
+                        <a href="{{ url_for('competitions', competition_id=competition.id) }}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-info-circle me-2"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Past Competitions -->
+    <h2 class="text-light mb-4">Past Competitions</h2>
+    <div class="row g-4">
+        {% for competition in competitions %}
+        {% if competition.is_completed %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header bg-secondary">
+                    <h5 class="card-title mb-0 text-light">{{ competition.name }}</h5>
+                </div>
+                <div class="card-body text-light">
+                    <p class="mb-2">
+                        <i class="far fa-calendar-alt me-2"></i>
+                        {{ competition.date.strftime('%B %d, %Y') }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ competition.city }}
+                    </p>
+                    <p class="mb-3">
+                        <i class="fas fa-star me-2"></i>
+                        {{ competition.level }}
+                    </p>
+                    <div class="d-grid">
+                        <a href="{{ url_for('view_results', competition_id=competition.id) }}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-trophy me-2"></i>View Results
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.judge-banner {
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/static/images/dance-banner.jpg');
+    background-size: cover;
+    background-position: center;
+    border-radius: 0.5rem;
+    margin: -1.5rem -0.75rem 2rem -0.75rem;
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.bg-dark {
+    background-color: #1a1a1a !important;
+}
+
+.card.bg-dark {
+    border-color: #2d2d2d;
+}
+
+.card-header.bg-primary {
+    background-color: #0d6efd !important;
+    border-bottom: none;
+}
+
+.card-header.bg-success {
+    background-color: #198754 !important;
+    border-bottom: none;
+}
+
+.card-header.bg-secondary {
+    background-color: #6c757d !important;
+    border-bottom: none;
+}
+
+.badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+</style>
+{% endblock %}

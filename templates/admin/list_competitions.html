@@ -39,8 +39,8 @@
                     </td>
                     <td>
                         <div class="btn-group" role="group">
-                            <a href="{{ url_for('edit_competition', competition_id=competition.id) }}" class="btn btn-sm btn-primary">Edit</a>
-                            <a href="{{ url_for('manage_competition_dancers', competition_id=competition.id) }}" class="btn btn-sm btn-info">Dancers</a>
+                            <a href="{{ url_for('admin_edit_competition', competition_id=competition.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                            <a href="{{ url_for('manage_dancers', competition_id=competition.id) }}" class="btn btn-sm btn-info">Dancers</a>
                             <a href="{{ url_for('manage_competition_rounds', competition_id=competition.id) }}" class="btn btn-sm btn-warning">Rounds</a>
                             <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete({{ competition.id }})">Delete</button>
                         </div>

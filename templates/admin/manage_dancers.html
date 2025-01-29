@@ -4,95 +4,429 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Manage Dancers - {{ competition.name }}</h1>
-        <a href="{{ url_for('admin_competitions') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Competitions
-        </a>
+        <div>
+            <a href="{{ url_for('admin_competitions') }}" class="btn btn-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Back to Competitions
+            </a>
+            {% if not competition.participant_list_locked %}
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addDancerModal">
+                <i class="fas fa-plus"></i> Add Dancer
+            </button>
+            {% endif %}
+        </div>
     </div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Ratio Warning -->
+    {% if not competition.check_ratio() %}
+    <div class="alert alert-warning" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Uneven Leader/Follower Ratio!</strong>
+        Leaders: {{ competition.get_leader_count() }}, 
+        Followers: {{ competition.get_follower_count() }}
+        {% if not competition.participant_list_locked %}
+        <button class="btn btn-sm btn-warning float-end" data-bs-toggle="modal" data-bs-target="#addAudienceModal">
+            Add Audience Member
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Participant List -->
     <div class="row">
-        <!-- Current Dancers -->
+        <!-- Leaders -->
         <div class="col-md-6">
-            <div class="card shadow-sm">
+            <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-users me-2"></i>Registered Dancers
-                    </h5>
+                    <h3 class="card-title h5 mb-0">
+                        <i class="fas fa-user me-2"></i>Leaders
+                    </h3>
                 </div>
                 <div class="card-body">
-                    {% if competition.users %}
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
+                                    <th>Number</th>
                                     <th>Name</th>
-                                    <th>Level</th>
+                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for user in competition.users %}
-                                <tr>
-                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
-                                    <td>{{ user.level }}</td>
+                                {% for participant in leaders %}
+                                <tr {% if not participant.is_active %}class="table-secondary"{% endif %}>
                                     <td>
-                                        <form method="POST" action="{{ url_for('remove_competition_dancer', competition_id=competition.id, user_id=user.id) }}" style="display: inline;">
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to remove this dancer?')">
-                                                <i class="fas fa-user-minus"></i>
-                                            </button>
-                                        </form>
+                                        <span class="badge bg-primary">{{ participant.dancer_number }}</span>
+                                    </td>
+                                    <td>
+                                        {{ participant.user.first_name }} {{ participant.user.last_name }}
+                                        {% if participant.is_audience_fill %}
+                                        <span class="badge bg-info">Audience</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if participant.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if not competition.participant_list_locked %}
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                                onclick="toggleDancerStatus({{ participant.id }})">
+                                            {% if participant.is_active %}
+                                            <i class="fas fa-user-slash"></i>
+                                            {% else %}
+                                            <i class="fas fa-user-check"></i>
+                                            {% endif %}
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                                onclick="removeDancer({{ participant.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                    {% else %}
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>No dancers registered yet
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Add Dancers -->
+        <!-- Followers -->
         <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-user-plus me-2"></i>Add Dancers
-                    </h5>
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h3 class="card-title h5 mb-0">
+                        <i class="fas fa-user me-2"></i>Followers
+                    </h3>
                 </div>
                 <div class="card-body">
-                    {% if all_users %}
-                    <form method="POST" action="{{ url_for('add_competition_dancer', competition_id=competition.id) }}">
-                        <div class="mb-3">
-                            <label for="user_id" class="form-label">Select Dancer</label>
-                            <select class="form-select" id="user_id" name="user_id" required>
-                                <option value="">Choose a dancer...</option>
-                                {% for user in all_users %}
-                                    {% if user not in competition.users %}
-                                    <option value="{{ user.id }}">
-                                        {{ user.first_name }} {{ user.last_name }} ({{ user.level }})
-                                    </option>
-                                    {% endif %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Number</th>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for participant in followers %}
+                                <tr {% if not participant.is_active %}class="table-secondary"{% endif %}>
+                                    <td>
+                                        <span class="badge bg-info">{{ participant.dancer_number }}</span>
+                                    </td>
+                                    <td>
+                                        {{ participant.user.first_name }} {{ participant.user.last_name }}
+                                        {% if participant.is_audience_fill %}
+                                        <span class="badge bg-info">Audience</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if participant.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if not competition.participant_list_locked %}
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                                onclick="toggleDancerStatus({{ participant.id }})">
+                                            {% if participant.is_active %}
+                                            <i class="fas fa-user-slash"></i>
+                                            {% else %}
+                                            <i class="fas fa-user-check"></i>
+                                            {% endif %}
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                                onclick="removeDancer({{ participant.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
                                 {% endfor %}
-                            </select>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-plus me-2"></i>Add Dancer
-                            </button>
-                        </div>
-                    </form>
-                    {% else %}
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>No available dancers to add
+                            </tbody>
+                        </table>
                     </div>
-                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-between mb-4">
+        <div>
+            <button class="btn btn-primary me-2" onclick="printDancerNumbers()">
+                <i class="fas fa-print me-2"></i>Print Numbers
+            </button>
+            <button class="btn btn-info me-2" onclick="announceNumbers()">
+                <i class="fas fa-bullhorn me-2"></i>Show Numbers for Announcement
+            </button>
+        </div>
+        {% if not competition.participant_list_locked %}
+        <button class="btn btn-success" onclick="lockParticipantList()">
+            <i class="fas fa-lock me-2"></i>Lock Participant List
+        </button>
+        {% else %}
+        <button class="btn btn-warning" onclick="unlockParticipantList()">
+            <i class="fas fa-lock-open me-2"></i>Unlock Participant List
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Dancer Modal -->
+<div class="modal fade" id="addDancerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Dancer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addDancerForm" method="POST" action="{{ url_for('add_dancer_to_competition', competition_id=competition.id) }}">
+                    {{ form.csrf_token }}
+                    <div class="mb-3">
+                        {{ form.dancer_id.label(class="form-label") }}
+                        {{ form.dancer_id(class="form-select") }}
+                    </div>
+                    {{ form.submit(class="btn btn-primary") }}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Audience Member Modal -->
+<div class="modal fade" id="addAudienceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Audience Member</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAudienceForm" method="POST" action="{{ url_for('add_audience_member', competition_id=competition.id) }}">
+                    {{ audience_form.csrf_token }}
+                    <div class="mb-3">
+                        {{ audience_form.name.label(class="form-label") }}
+                        {{ audience_form.name(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ audience_form.dance_role.label(class="form-label") }}
+                        {{ audience_form.dance_role(class="form-select") }}
+                    </div>
+                    {{ audience_form.submit(class="btn btn-primary") }}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Announcement Modal -->
+<div class="modal fade" id="announcementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dancer Numbers</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3>Leaders</h3>
+                        <div class="display-numbers leaders-numbers"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h3>Followers</h3>
+                        <div class="display-numbers followers-numbers"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleDancerStatus(participantId) {
+    fetch(`/api/participant/${participantId}/toggle-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    }).then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              location.reload();
+          } else {
+              alert('Error updating status');
+          }
+      });
+}
+
+function removeDancer(participantId) {
+    if (confirm('Are you sure you want to remove this dancer?')) {
+        fetch(`/api/participant/${participantId}/remove`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  location.reload();
+              } else {
+                  alert('Error removing dancer');
+              }
+          });
+    }
+}
+
+function lockParticipantList() {
+    if (confirm('Are you sure you want to lock the participant list? This will prevent further changes.')) {
+        fetch(`/api/competition/{{ competition.id }}/lock-participants`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  location.reload();
+              } else {
+                  alert('Error locking participant list');
+              }
+          });
+    }
+}
+
+function unlockParticipantList() {
+    if (confirm('Are you sure you want to unlock the participant list?')) {
+        fetch(`/api/competition/{{ competition.id }}/unlock-participants`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  location.reload();
+              } else {
+                  alert('Error unlocking participant list');
+              }
+          });
+    }
+}
+
+function announceNumbers() {
+    const modal = new bootstrap.Modal(document.getElementById('announcementModal'));
+    
+    // Populate numbers
+    const leadersDiv = document.querySelector('.leaders-numbers');
+    const followersDiv = document.querySelector('.followers-numbers');
+    
+    leadersDiv.innerHTML = '';
+    followersDiv.innerHTML = '';
+    
+    {% for participant in leaders %}
+    if ({{ participant.is_active|tojson }}) {
+        leadersDiv.innerHTML += `<div class="number-display">{{ participant.dancer_number }}</div>`;
+    }
+    {% endfor %}
+    
+    {% for participant in followers %}
+    if ({{ participant.is_active|tojson }}) {
+        followersDiv.innerHTML += `<div class="number-display">{{ participant.dancer_number }}</div>`;
+    }
+    {% endfor %}
+    
+    modal.show();
+}
+
+function printDancerNumbers() {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Dancer Numbers - {{ competition.name }}</title>
+            <style>
+                .number-card {
+                    border: 2px solid black;
+                    padding: 20px;
+                    margin: 10px;
+                    display: inline-block;
+                    text-align: center;
+                    page-break-inside: avoid;
+                }
+                .number {
+                    font-size: 48px;
+                    font-weight: bold;
+                }
+                .role {
+                    font-size: 24px;
+                }
+                @media print {
+                    .number-card {
+                        width: 45%;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <h1>{{ competition.name }} - Dancer Numbers</h1>
+            {% for participant in leaders + followers %}
+            {% if participant.is_active %}
+            <div class="number-card">
+                <div class="number">{{ participant.dancer_number }}</div>
+                <div class="role">{{ participant.user.dance_role|title }}</div>
+                <div>{{ participant.user.first_name }} {{ participant.user.last_name }}</div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+</script>
+
+<style>
+.display-numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.number-display {
+    font-size: 24px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: 2px solid #007bff;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+}
+</style>
 {% endblock %}

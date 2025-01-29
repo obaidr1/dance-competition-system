@@ -1,65 +1,131 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="text-light mb-4">Upcoming Competitions</h1>
-    
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        {% for competition in competitions %}
-        <div class="col">
-            <div class="card h-100">
-                {% if competition.banner %}
-                <a href="{{ url_for('competition_info', competition_id=competition.id) }}" class="competition-image-link">
-                    <img src="{{ url_for('static', filename=competition.banner) }}" 
-                         class="competition-image" 
-                         alt="{{ competition.name }}">
-                </a>
-                {% endif %}
-                
-                <div class="card-body">
-                    <h5 class="card-title text-light mb-3">{{ competition.name }}</h5>
-                    
-                    <div class="competition-details text-light-muted">
-                        <p class="mb-2">
-                            <i class="fas fa-calendar"></i>
-                            {{ competition.date.strftime('%B %d, %Y') }}
-                        </p>
-                        <p class="mb-2">
-                            <i class="fas fa-map-marker-alt"></i>
-                            {{ competition.location }}
-                        </p>
-                        <p class="mb-2">
-                            <i class="fas fa-users"></i>
-                            {{ competition.users|length }} registered
-                        </p>
-                    </div>
-                    
-                    {% if competition.registration_open %}
-                    <span class="badge badge-success">Registration Open</span>
-                    {% else %}
-                    <span class="badge badge-danger">Registration Closed</span>
-                    {% endif %}
+<div class="container-fluid py-4 bg-dark">
+    <!-- Competition Banner -->
+    <div class="competition-banner mb-5">
+        <div class="text-center py-5">
+            <h1 class="display-4 text-light mb-3">Dance Competitions</h1>
+            <p class="lead text-light mb-0">Join exciting dance competitions and showcase your talent!</p>
+        </div>
+    </div>
+
+    <!-- Upcoming Competitions -->
+    <h2 class="text-light mb-4">Upcoming Competitions</h2>
+    <div class="row g-4 mb-5">
+        {% for competition in upcoming_competitions %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card bg-dark border-primary h-100">
+                <div class="card-header bg-primary">
+                    <h5 class="card-title mb-0 text-light">{{ competition.name }}</h5>
                 </div>
-                
-                <div class="card-footer">
-                    <div class="d-flex gap-2">
+                <div class="card-body text-light">
+                    <p class="mb-2">
+                        <i class="far fa-calendar-alt me-2"></i>
+                        {{ competition.date.strftime('%B %d, %Y') }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ competition.city }}
+                    </p>
+                    <p class="mb-3">
+                        <i class="fas fa-star me-2"></i>
+                        {{ competition.level }}
+                    </p>
+                    <div class="d-grid gap-2">
                         <a href="{{ url_for('competition_info', competition_id=competition.id) }}" 
-                           class="btn btn-primary w-100">
-                            <i class="fas fa-info-circle me-2"></i>More Info
+                           class="btn btn-primary">
+                            <i class="fas fa-info-circle me-2"></i>View Details
                         </a>
-                        
-                        {% if competition.registration_open and current_user not in competition.users %}
-                        <form action="{{ url_for('join_competition', competition_id=competition.id) }}" 
-                              method="POST" 
-                              class="w-100">
-                            <button type="submit" class="btn btn-success w-100">
-                                <i class="fas fa-plus-circle me-2"></i>Join
+                        {% if competition.id in registered_competitions %}
+                            <button class="btn btn-secondary" disabled>
+                                <i class="fas fa-check me-2"></i>Registered
                             </button>
-                        </form>
-                        {% elif current_user in competition.users %}
-                        <button class="btn btn-secondary w-100" disabled>
-                            <i class="fas fa-check me-2"></i>Registered
-                        </button>
+                        {% else %}
+                            <a href="{{ url_for('join_competition', competition_id=competition.id) }}" 
+                               class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>Join Competition
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Competitions In Progress -->
+    <h2 class="text-light mb-4">Competitions In Progress</h2>
+    <div class="row g-4 mb-5">
+        {% for competition in in_progress_competitions %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card bg-dark border-primary h-100">
+                <div class="card-header bg-primary">
+                    <h5 class="card-title mb-0 text-light">{{ competition.name }}</h5>
+                </div>
+                <div class="card-body text-light">
+                    <p class="mb-2">
+                        <i class="far fa-calendar-alt me-2"></i>
+                        {{ competition.date.strftime('%B %d, %Y') }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ competition.city }}
+                    </p>
+                    <p class="mb-3">
+                        <i class="fas fa-star me-2"></i>
+                        {{ competition.level }}
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('competition_info', competition_id=competition.id) }}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-info-circle me-2"></i>View Details
+                        </a>
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('view_results', competition_id=competition.id) }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-trophy me-2"></i>View Results
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Completed Competitions -->
+    <h2 class="text-light mb-4">Completed Competitions</h2>
+    <div class="row g-4">
+        {% for competition in completed_competitions %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card bg-dark border-primary h-100">
+                <div class="card-header bg-primary">
+                    <h5 class="card-title mb-0 text-light">{{ competition.name }}</h5>
+                </div>
+                <div class="card-body text-light">
+                    <p class="mb-2">
+                        <i class="far fa-calendar-alt me-2"></i>
+                        {{ competition.date.strftime('%B %d, %Y') }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ competition.city }}
+                    </p>
+                    <p class="mb-3">
+                        <i class="fas fa-star me-2"></i>
+                        {{ competition.level }}
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('competition_info', competition_id=competition.id) }}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-info-circle me-2"></i>View Details
+                        </a>
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('view_results', competition_id=competition.id) }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-trophy me-2"></i>View Results
+                            </a>
                         {% endif %}
                     </div>
                 </div>
@@ -68,4 +134,35 @@
         {% endfor %}
     </div>
 </div>
+
+<style>
+.competition-banner {
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/static/images/dance-banner.jpg');
+    background-size: cover;
+    background-position: center;
+    border-radius: 0.5rem;
+    margin: -1.5rem -0.75rem 2rem -0.75rem;
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.bg-dark {
+    background-color: #1a1a1a !important;
+}
+
+.card.bg-dark {
+    border-color: #2d2d2d;
+}
+
+.card-header.bg-primary {
+    background-color: #0d6efd !important;
+    border-bottom: none;
+}
+</style>
 {% endblock %}

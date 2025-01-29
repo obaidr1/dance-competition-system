@@ -19,19 +19,16 @@ with app.app_context():
 
     # Create admin user
     admin = User(
-        username='admin',
         email='admin@example.com',
         password=generate_password_hash('admin123'),
-        role='admin',
-        city='San Francisco',
-        city_id=5391959,
-        country='United States',
-        country_code='US',
-        is_active=True
+        first_name='Admin',
+        last_name='User',
+        dance_role='leader',
+        is_admin=True
     )
     db.session.add(admin)
     db.session.commit()
     print("\nAdmin user created successfully!")
     print("\nAdmin credentials:")
-    print("Username: admin")
+    print("Email: admin@example.com")
     print("Password: admin123")

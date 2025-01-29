@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid py-4">
     <div class="row">
         <div class="col-md-12 mb-4">
-            <h1 class="display-4 text-center welcome-text mb-5">Admin Dashboard</h1>
+            <h1 class="text-light text-center mb-5">Admin Dashboard</h1>
         </div>
     </div>
     
     <div class="row g-4">
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm dashboard-card">
+            <div class="card bg-dark h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-users fa-3x mb-3 text-primary"></i>
-                    <h3 class="card-title h4">Manage Users</h3>
-                    <p class="card-text text-secondary">View and manage registered users.</p>
-                    <a href="{{ url_for('admin_users') }}" class="btn btn-primary">
+                    <h3 class="card-title h4 text-light">Manage Users</h3>
+                    <p class="card-text text-light-50">View and manage registered users.</p>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary">
                         <i class="fas fa-arrow-right me-2"></i>Go to Users
                     </a>
                 </div>
@@ -23,12 +23,12 @@
         </div>
         
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm dashboard-card">
+            <div class="card bg-dark h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-trophy fa-3x mb-3 text-warning"></i>
-                    <h3 class="card-title h4">Manage Competitions</h3>
-                    <p class="card-text text-secondary">Create and manage dance competitions.</p>
-                    <a href="{{ url_for('admin_competitions') }}" class="btn btn-primary">
+                    <h3 class="card-title h4 text-light">Manage Competitions</h3>
+                    <p class="card-text text-light-50">Create and manage dance competitions.</p>
+                    <a href="{{ url_for('admin_competitions') }}" class="btn btn-outline-warning">
                         <i class="fas fa-arrow-right me-2"></i>Go to Competitions
                     </a>
                 </div>
@@ -36,44 +36,64 @@
         </div>
         
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm dashboard-card">
+            <div class="card bg-dark h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-chart-bar fa-3x mb-3 text-info"></i>
-                    <h3 class="card-title h4">View Statistics</h3>
-                    <p class="card-text text-secondary">View system statistics and reports.</p>
-                    <a href="{{ url_for('admin_statistics') }}" class="btn btn-primary">
+                    <h3 class="card-title h4 text-light">View Statistics</h3>
+                    <p class="card-text text-light-50">View system statistics and reports.</p>
+                    <a href="{{ url_for('admin_statistics') }}" class="btn btn-outline-info">
                         <i class="fas fa-arrow-right me-2"></i>View Stats
                     </a>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h4 class="card-title">Quick Actions</h4>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <a href="{{ url_for('admin_create_competition') }}" class="btn btn-success w-100">
-                                <i class="fas fa-plus me-2"></i>Create New Competition
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a href="{{ url_for('admin_reports') }}" class="btn btn-info w-100">
-                                <i class="fas fa-file-alt me-2"></i>Generate Reports
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a href="{{ url_for('admin_settings') }}" class="btn btn-secondary w-100">
-                                <i class="fas fa-cog me-2"></i>System Settings
-                            </a>
-                        </div>
-                    </div>
+    
+    <div class="row mt-4 g-4">
+        <div class="col-md-4">
+            <div class="card bg-dark h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-alt fa-3x mb-3 text-success"></i>
+                    <h3 class="card-title h4 text-light">Reports</h3>
+                    <p class="card-text text-light-50">Generate and view reports.</p>
+                    <a href="{{ url_for('admin_reports') }}" class="btn btn-outline-success">
+                        <i class="fas fa-arrow-right me-2"></i>View Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card bg-dark h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-cog fa-3x mb-3 text-secondary"></i>
+                    <h3 class="card-title h4 text-light">Settings</h3>
+                    <p class="card-text text-light-50">Configure system settings.</p>
+                    <a href="{{ url_for('admin_settings') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card bg-dark h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-plus fa-3x mb-3 text-danger"></i>
+                    <h3 class="card-title h4 text-light">Invite Testers</h3>
+                    <p class="card-text text-light-50">Invite users to test the system.</p>
+                    <a href="{{ url_for('invite_tester') }}" class="btn btn-outline-danger">
+                        <i class="fas fa-arrow-right me-2"></i>Invite Users
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.text-light-50 {
+    color: rgba(255, 255, 255, 0.5);
+}
+</style>
 {% endblock %}

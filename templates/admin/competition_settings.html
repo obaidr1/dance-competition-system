@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 col-lg-10 col-xl-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Competition Settings: {{ competition.name }}</h1>
+                <div>
+                    <a href="{{ url_for('admin_competitions') }}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left"></i> Back to Competitions
+                    </a>
+                    <a href="{{ url_for('manage_dancers', competition_id=competition.id) }}" class="btn btn-primary">
+                        <i class="fas fa-users"></i> Manage Dancers
+                    </a>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="row g-4">
+                <!-- 1. Competition Details -->
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h3 class="card-title h5 mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Competition Details
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('update_competition_settings', competition_id=competition.id) }}" method="POST" enctype="multipart/form-data">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="name" class="form-label">Competition Name</label>
+                                        <input type="text" class="form-control" id="name" name="name" 
+                                               value="{{ competition.name }}" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="date" class="form-label">Date</label>
+                                        <input type="date" class="form-control" id="date" name="date" 
+                                               value="{{ format_date(competition.date) }}" 
+                                               min="{{ format_date(current_time) }}" required>
+                                        <div class="form-text text-danger" id="date-error" style="display: none;">
+                                            Competition date cannot be in the past
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="city" class="form-label">City</label>
+                                        <input type="text" class="form-control" id="city" name="city" 
+                                               value="{{ competition.city }}" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price" class="form-label">Registration Price</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="price" name="price" 
+                                                   min="0" step="0.01" value="{{ competition.price }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" id="description" name="description" 
+                                              rows="3">{{ competition.description }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="banner" class="form-label">Banner Image</label>
+                                    <input type="file" class="form-control" id="banner" name="banner" accept="image/*">
+                                    {% if competition.banner %}
+                                    <div class="mt-2">
+                                        <img src="{{ url_for('static', filename='uploads/' + competition.banner) }}" 
+                                             alt="Current banner" class="img-thumbnail" style="max-height: 100px;">
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="upcoming" {% if competition.status == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                                        <option value="ongoing" {% if competition.status == 'ongoing' %}selected{% endif %}>Ongoing</option>
+                                        <option value="completed" {% if competition.status == 'completed' %}selected{% endif %}>Completed</option>
+                                        <option value="cancelled" {% if competition.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="scoring_dimensions" class="form-label">Scoring Dimensions</label>
+                                    <select class="form-select" id="scoring_dimensions" name="scoring_dimensions" multiple required>
+                                        {% set dimensions = competition.get_scoring_dimensions() %}
+                                        <option value="Musicality" {% if 'Musicality' in dimensions %}selected{% endif %}>Musicality</option>
+                                        <option value="Connection" {% if 'Connection' in dimensions %}selected{% endif %}>Connection</option>
+                                        <option value="Styling" {% if 'Styling' in dimensions %}selected{% endif %}>Styling</option>
+                                        <option value="Footwork" {% if 'Footwork' in dimensions %}selected{% endif %}>Footwork</option>
+                                        <option value="Impression" {% if 'Impression' in dimensions %}selected{% endif %}>Impression</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Competition Structure -->
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h3 class="card-title h5 mb-0">
+                                <i class="fas fa-sitemap me-2"></i>Competition Structure
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin_update_competition_structure', competition_id=competition.id) }}">
+                                <div class="mb-3">
+                                    <label for="max_rounds" class="form-label">Maximum Rounds</label>
+                                    <input type="number" class="form-control" id="max_rounds" 
+                                           name="max_rounds" value="{{ competition.max_rounds or '' }}" min="1">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="rotation_size" class="form-label">Rotation Size</label>
+                                    <input type="number" class="form-control" id="rotation_size" 
+                                           name="rotation_size" value="{{ competition.rotation_size or '' }}" min="1">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="pairs_per_final" class="form-label">Pairs in Final</label>
+                                    <input type="number" class="form-control" id="pairs_per_final" 
+                                           name="pairs_per_final" value="{{ competition.pairs_per_final or '' }}" min="1">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update Structure</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Registration Settings -->
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h3 class="card-title h5 mb-0">
+                                <i class="fas fa-user-plus me-2"></i>Registration Settings
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin_update_registration_settings', competition_id=competition.id) }}">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="registration_open" 
+                                               name="registration_open" {% if competition.registration_open %}checked{% endif %}>
+                                        <label class="form-check-label" for="registration_open">Registration Open</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="max_participants" class="form-label">Maximum Participants</label>
+                                    <input type="number" class="form-control" id="max_participants" 
+                                           name="max_participants" value="{{ competition.max_participants or '' }}" min="1">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update Registration Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Competition Judges -->
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-danger text-white">
+                            <h3 class="card-title h5 mb-0">
+                                <i class="fas fa-gavel me-2"></i>Competition Judges
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6>Current Judges</h6>
+                                <div class="list-group">
+                                    {% for judge in competition.judges %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>{{ judge.first_name }} {{ judge.last_name }}</div>
+                                        <div>
+                                            {% if competition.head_judge_id == judge.id %}
+                                                <button class="btn btn-sm btn-primary me-2" disabled>Head Judge</button>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-outline-primary me-2" onclick="updateHeadJudge('{{ url_for('admin_update_head_judge', competition_id=competition.id) }}', '{{ judge.id }}')">Head Judge</button>
+                                            {% endif %}
+                                            <button class="btn btn-sm btn-danger" onclick="removeJudge('{{ url_for('admin_remove_judge_from_competition', competition_id=competition.id, judge_id=judge.id) }}')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <form method="POST" action="{{ url_for('admin_add_existing_judge_to_competition', competition_id=competition.id) }}" class="mb-3">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="input-group">
+                                    <select class="form-select" name="judge_id" required>
+                                        <option value="">Select Judge</option>
+                                        {% for judge in available_judges %}
+                                            <option value="{{ judge.id }}">{{ judge.first_name }} {{ judge.last_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-primary">Add Judge</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Head Judge -->
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="card-title h5 mb-0">
+                                <i class="fas fa-gavel me-2"></i>Head Judge
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            {% if not competition.head_judge_id %}
+                                <div class="alert alert-warning">
+                                    Please select a head judge for this competition
+                                </div>
+                            {% endif %}
+                            
+                            <form method="POST" action="{{ url_for('admin_update_head_judge', competition_id=competition.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="mb-3">
+                                    <label for="head_judge" class="form-label">Head Judge</label>
+                                    <select class="form-select" id="head_judge" name="head_judge">
+                                        <option value="">Select Head Judge</option>
+                                        {% for judge in competition.judges %}
+                                            <option value="{{ judge.id }}" {% if competition.head_judge_id == judge.id %}selected{% endif %}>
+                                                {{ judge.first_name }} {{ judge.last_name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">
+                                        The head judge will oversee the competition and make final decisions in case of ties or disputes.
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update Head Judge</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateHeadJudge(url, judgeId) {
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            head_judge: judgeId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Failed to update head judge');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating head judge');
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Add date validation
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        dateInput.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const errorDiv = document.getElementById('date-error');
+            if (selectedDate < today) {
+                errorDiv.style.display = 'block';
+                this.value = '';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

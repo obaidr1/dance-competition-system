@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="card bg-dark mb-4">
+                <div class="card-body">
+                    <h1 class="text-light mb-4">
+                        Manage Competition: {{ competition.name }}
+                    </h1>
+
+                    <!-- Competition Status -->
+                    <div class="mb-4">
+                        <h4 class="text-light mb-3">Status</h4>
+                        <div class="d-flex align-items-center gap-2">
+                            {% if competition.status == 'upcoming' %}
+                                <span class="badge bg-primary">Upcoming</span>
+                            {% elif competition.status == 'in_progress' %}
+                                <span class="badge bg-success">In Progress</span>
+                                <span class="badge bg-info">Round {{ competition.current_round }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Completed</span>
+                            {% endif %}
+
+                            {% if competition.registration_open %}
+                                <span class="badge bg-success">Registration Open</span>
+                            {% else %}
+                                <span class="badge bg-danger">Registration Closed</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Competition Requirements -->
+                    <div class="mb-4">
+                        <h4 class="text-light mb-3">Requirements Check</h4>
+                        <ul class="list-group">
+                            <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center">
+                                Minimum Leaders (5)
+                                {% if competition.leader_count >= 5 %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i></span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ competition.leader_count }}/5</span>
+                                {% endif %}
+                            </li>
+                            <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center">
+                                Minimum Followers (5)
+                                {% if competition.follower_count >= 5 %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i></span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ competition.follower_count }}/5</span>
+                                {% endif %}
+                            </li>
+                            <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center">
+                                Head Judge Assigned
+                                {% if competition.head_judge %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i></span>
+                                {% else %}
+                                    <span class="badge bg-danger"><i class="fas fa-times"></i></span>
+                                {% endif %}
+                            </li>
+                            <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center">
+                                Judges Assigned
+                                {% if competition.judges|length > 0 %}
+                                    <span class="badge bg-success">{{ competition.judges|length }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">0</span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Participant List -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="text-light mb-0">Participants</h4>
+                            {% if not competition.participant_list_locked %}
+                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#lockListModal">
+                                <i class="fas fa-lock me-2"></i>Lock Participant List
+                            </button>
+                            {% else %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-lock me-2"></i>List Locked
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Leaders Table -->
+                        <h5 class="text-light mb-3">Leaders</h5>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-dark table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Level</th>
+                                        <th>Points</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for participant in competition.participants %}
+                                    {% if participant.user.dance_role == 'leader' %}
+                                    <tr>
+                                        <td>{{ participant.user.username }}</td>
+                                        <td>{{ participant.user.level }}</td>
+                                        <td>{{ participant.user.total_points[competition.level.lower()] }}</td>
+                                        <td>
+                                            {% if not competition.participant_list_locked %}
+                                            <button class="btn btn-danger btn-sm">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Followers Table -->
+                        <h5 class="text-light mb-3">Followers</h5>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Level</th>
+                                        <th>Points</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for participant in competition.participants %}
+                                    {% if participant.user.dance_role == 'follower' %}
+                                    <tr>
+                                        <td>{{ participant.user.username }}</td>
+                                        <td>{{ participant.user.level }}</td>
+                                        <td>{{ participant.user.total_points[competition.level.lower()] }}</td>
+                                        <td>
+                                            {% if not competition.participant_list_locked %}
+                                            <button class="btn btn-danger btn-sm">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Judge Assignment -->
+            <div class="card bg-dark mb-4">
+                <div class="card-body">
+                    <h4 class="text-light mb-3">Assign Judges</h4>
+                    <form action="{{ url_for('assign_judge', competition_id=competition.id) }}" method="POST">
+                        {{ judge_form.csrf_token }}
+                        <div class="mb-3">
+                            {{ judge_form.judges.label(class="form-label text-light") }}
+                            {{ judge_form.judges(class="form-select bg-dark text-light") }}
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ judge_form.is_head_judge(class="form-check-input") }}
+                                {{ judge_form.is_head_judge.label(class="form-check-label text-light") }}
+                            </div>
+                        </div>
+                        {{ judge_form.submit(class="btn btn-primary w-100") }}
+                    </form>
+
+                    <hr class="border-secondary">
+
+                    <h5 class="text-light mb-3">Assigned Judges</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for judge in competition.judges %}
+                        <li class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center">
+                            {{ judge.username }}
+                            {% if competition.head_judge_id == judge.id %}
+                            <span class="badge bg-warning">Head Judge</span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Competition Controls -->
+            <div class="card bg-dark mb-4">
+                <div class="card-body">
+                    <h4 class="text-light mb-3">Competition Controls</h4>
+                    
+                    {% if competition.status == 'upcoming' %}
+                        {% if competition.can_start_competition() %}
+                        <form action="{{ url_for('start_round', competition_id=competition.id) }}" method="POST" class="mb-3">
+                            {{ csrf_token() }}
+                            <input type="hidden" name="round_number" value="1">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-play me-2"></i>Start Competition
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            Cannot start competition. Check requirements above.
+                        </div>
+                        {% endif %}
+                    {% elif competition.status == 'in_progress' %}
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createHeatsModal">
+                                <i class="fas fa-users me-2"></i>Create Heats
+                            </button>
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#startRoundModal">
+                                <i class="fas fa-forward me-2"></i>Next Round
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lock List Modal -->
+<div class="modal fade" id="lockListModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-light">Lock Participant List</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-light">
+                <p>Are you sure you want to lock the participant list? This will:</p>
+                <ul>
+                    <li>Close registration for this competition</li>
+                    <li>Prevent any changes to the participant list</li>
+                    <li>Allow the competition to start if all other requirements are met</li>
+                </ul>
+                <p class="mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('lock_participant_list', competition_id=competition.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-warning">Lock List</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Heats Modal -->
+<div class="modal fade" id="createHeatsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-light">Create Heats</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-light">
+                <p>This will create heats for the current round by:</p>
+                <ul>
+                    <li>Randomly matching leaders and followers</li>
+                    <li>Creating groups of 5 couples per heat</li>
+                    <li>Preparing the scoring system for judges</li>
+                </ul>
+                <p class="mb-0">Are you ready to proceed?</p>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('create_heats', competition_id=competition.id, round_id=competition.current_round) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary">Create Heats</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Start Round Modal -->
+<div class="modal fade" id="startRoundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-light">Start Next Round</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('start_round', competition_id=competition.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {{ start_round_form.round_number.label(class="form-label text-light") }}
+                    {{ start_round_form.round_number(class="form-select bg-dark text-light mb-3") }}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Make sure all judges have submitted their scores for the current round before proceeding.
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        {{ start_round_form.submit(class="btn btn-success") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

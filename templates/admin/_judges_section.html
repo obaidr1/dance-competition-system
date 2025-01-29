@@ -1,0 +1,78 @@
+<!-- Competition Judges -->
+<div class="col-md-6">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark">
+            <h3 class="card-title h5 mb-0">
+                <i class="fas fa-gavel me-2"></i>Competition Judges
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- Current Judges List -->
+            <h5>Current Judges</h5>
+            <div class="list-group mb-3">
+                {% for judge in competition.judges %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        {{ judge.first_name }} {{ judge.last_name }}
+                        {% if competition.head_judge_id == judge.id %}
+                            <span class="badge bg-primary ms-2">Head Judge</span>
+                        {% endif %}
+                    </div>
+                    <div class="btn-group">
+                        {% if competition.head_judge_id != judge.id %}
+                            <form method="POST" action="{{ url_for('admin_update_head_judge', competition_id=competition.id) }}" class="d-inline">
+                                <input type="hidden" name="head_judge" value="{{ judge.id }}">
+                                <button type="submit" class="btn btn-primary btn-sm me-2">
+                                    <i class="fas fa-crown"></i> Set as Head Judge
+                                </button>
+                            </form>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('remove_judge', competition_id=competition.id, judge_id=judge.id) }}" 
+                              class="d-inline" onsubmit="return confirm('Are you sure you want to remove this judge?');">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="list-group-item text-muted">
+                    No judges assigned yet
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Add Existing Judge -->
+            <h5>Add Existing Judge</h5>
+            <form method="POST" action="{{ url_for('add_existing_judge', competition_id=competition.id) }}" class="mb-3">
+                <div class="mb-3">
+                    <select class="form-select" name="judge_id" required>
+                        <option value="">Select a Judge</option>
+                        {% for judge in available_judges %}
+                        <option value="{{ judge.id }}">{{ judge.first_name }} {{ judge.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Judge</button>
+            </form>
+
+            <!-- Add New Judge -->
+            <h5>Add New Judge</h5>
+            <form method="POST" action="{{ url_for('add_new_judge', competition_id=competition.id) }}">
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-control" name="first_name" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-control" name="last_name" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Judge</button>
+            </form>
+        </div>
+    </div>
+</div>

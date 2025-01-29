@@ -17,8 +17,10 @@
                     </div>
 
                     <div class="d-flex justify-content-center gap-3">
-                        <a href="{{ url_for('join_competition', competition_id=competition.id, confirm='true') }}" 
-                           class="btn btn-primary">Yes, Join Competition</a>
+                        <form action="{{ url_for('join_competition', competition_id=competition.id) }}" method="POST" class="m-0">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-primary">Yes, Join Competition</button>
+                        </form>
                         <a href="{{ url_for('user_dashboard') }}" 
                            class="btn btn-outline-light">Cancel</a>
                     </div>

@@ -13,19 +13,19 @@
                     <div class="competition-details mb-4">
                         <div class="row mb-3">
                             <div class="col-md-4">
-                                <div class="detail-item">
+                                <div class="detail-item text-light">
                                     <i class="far fa-calendar-alt me-2"></i>
                                     {{ competition.date.strftime('%B %d, %Y') }}
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="detail-item">
+                                <div class="detail-item text-light">
                                     <i class="fas fa-map-marker-alt me-2"></i>
                                     {{ competition.city }}
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="detail-item">
+                                <div class="detail-item text-light">
                                     <i class="fas fa-users me-2"></i>
                                     {{ leaders_count + followers_count }} registered
                                 </div>
@@ -35,9 +35,9 @@
 
                     <!-- Registration Status -->
                     {% if competition.date >= current_date %}
-                        <div class="competition-status mb-4">Registration Open</div>
+                        <div class="competition-status mb-4 text-light">Registration Open</div>
                     {% else %}
-                        <div class="competition-status closed mb-4">Registration Closed</div>
+                        <div class="competition-status closed mb-4 text-light">Registration Closed</div>
                     {% endif %}
 
                     <!-- Statistics Cards -->
@@ -45,7 +45,7 @@
                         <div class="col-md-6">
                             <div class="card bg-dark h-100">
                                 <div class="card-body text-center">
-                                    <h2 class="display-4 mb-0">{{ leaders_count }}</h2>
+                                    <h2 class="display-4 mb-0 text-light">{{ leaders_count }}</h2>
                                     <p class="text-light mb-0">Leaders</p>
                                 </div>
                             </div>
@@ -53,7 +53,7 @@
                         <div class="col-md-6">
                             <div class="card bg-dark h-100">
                                 <div class="card-body text-center">
-                                    <h2 class="display-4 mb-0">{{ followers_count }}</h2>
+                                    <h2 class="display-4 mb-0 text-light">{{ followers_count }}</h2>
                                     <p class="text-light mb-0">Followers</p>
                                 </div>
                             </div>
@@ -66,7 +66,7 @@
                            class="btn btn-primary">
                             <i class="fas fa-arrow-left"></i>Back to Competitions
                         </a>
-                        {% if current_user in competition.users %}
+                        {% if is_registered %}
                             <button class="btn btn-secondary" disabled>
                                 <i class="fas fa-check"></i>Registered
                             </button>
@@ -76,7 +76,7 @@
                                 <i class="fas fa-plus"></i>Register
                             </a>
                         {% endif %}
-                        {% if current_user in competition.users %}
+                        {% if is_registered %}
                             <a href="{{ url_for('view_results', competition_id=competition.id) }}" 
                                class="btn btn-primary">
                                 <i class="fas fa-trophy"></i>View Results
@@ -89,56 +89,3 @@
     </div>
 </div>
 {% endblock %}
-```
-
-Note: The styles have been removed from the HTML file and should be added to the custom.css file. The styles are as follows:
-
-```css
-.competition-details .detail-item {
-    padding: 0.5rem 0;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.competition-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.competition-actions .btn {
-    flex: 1;
-    min-width: 120px;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem;
-    white-space: nowrap;
-}
-
-.competition-actions .btn i {
-    margin-right: 0.5rem;
-}
-
-.competition-status {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 1rem;
-    border-radius: 50px;
-    font-size: 0.875rem;
-    background-color: #28a745;
-    color: white;
-}
-
-.competition-status.closed {
-    background-color: #dc3545;
-}
-
-@media (max-width: 768px) {
-    .competition-actions {
-        flex-direction: column;
-    }
-    
-    .competition-actions .btn {
-        width: 100%;
-    }
-}

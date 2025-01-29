@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 col-xl-10 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>System Settings</h1>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="row g-4">
+                <!-- General Settings -->
+                <div class="col-12 col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="card-title h5 mb-0">
+                                <i class="fas fa-cog me-2"></i>General Settings
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin_settings_update') }}">
+                                <input type="hidden" name="section" value="general">
+                                <div class="mb-3">
+                                    <label for="site_name" class="form-label">Site Name</label>
+                                    <input type="text" class="form-control" id="site_name" name="site_name" 
+                                           value="{{ settings.site_name }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contact_email" class="form-label">Contact Email</label>
+                                    <input type="email" class="form-control" id="contact_email" name="contact_email" 
+                                           value="{{ settings.contact_email }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="timezone" class="form-label">Timezone</label>
+                                    <select class="form-select" id="timezone" name="timezone">
+                                        <option value="UTC" {% if settings.timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                                        <option value="US/Eastern" {% if settings.timezone == 'US/Eastern' %}selected{% endif %}>US/Eastern</option>
+                                        <option value="US/Central" {% if settings.timezone == 'US/Central' %}selected{% endif %}>US/Central</option>
+                                        <option value="US/Pacific" {% if settings.timezone == 'US/Pacific' %}selected{% endif %}>US/Pacific</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save General Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Competition Settings -->
+                <div class="col-12 col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-success text-white">
+                            <h3 class="card-title h5 mb-0">
+                                <i class="fas fa-trophy me-2"></i>Competition Settings
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin_settings_update') }}">
+                                <input type="hidden" name="section" value="competition">
+                                <div class="mb-3">
+                                    <label for="max_competitors" class="form-label">Maximum Competitors per Competition</label>
+                                    <input type="number" class="form-control" id="max_competitors" name="max_competitors" 
+                                           value="{{ settings.max_competitors }}" min="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="registration_buffer_days" class="form-label">Registration Buffer Days</label>
+                                    <input type="number" class="form-control" id="registration_buffer_days" 
+                                           name="registration_buffer_days" value="{{ settings.registration_buffer_days }}" 
+                                           min="0" required>
+                                    <div class="form-text">Number of days before competition when registration closes</div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enable_waitlist" 
+                                               name="enable_waitlist" {% if settings.enable_waitlist %}checked{% endif %}>
+                                        <label class="form-check-label" for="enable_waitlist">Enable Waitlist</label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success">Save Competition Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="col-12 col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-info text-white">
+                            <h3 class="card-title h5 mb-0">
+                                <i class="fas fa-bell me-2"></i>Notification Settings
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin_settings_update') }}">
+                                <input type="hidden" name="section" value="notifications">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="email_notifications" 
+                                               name="email_notifications" {% if settings.email_notifications %}checked{% endif %}>
+                                        <label class="form-check-label" for="email_notifications">Enable Email Notifications</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="registration_notifications" 
+                                               name="registration_notifications" {% if settings.registration_notifications %}checked{% endif %}>
+                                        <label class="form-check-label" for="registration_notifications">Registration Notifications</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="score_notifications" 
+                                               name="score_notifications" {% if settings.score_notifications %}checked{% endif %}>
+                                        <label class="form-check-label" for="score_notifications">Score Submission Notifications</label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-info">Save Notification Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Settings -->
+                <div class="col-12 col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-warning text-dark">
+                            <h3 class="card-title h5 mb-0">
+                                <i class="fas fa-dollar-sign me-2"></i>Payment Settings
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin_settings_update') }}">
+                                <input type="hidden" name="section" value="payment">
+                                <div class="mb-3">
+                                    <label for="currency" class="form-label">Currency</label>
+                                    <select class="form-select" id="currency" name="currency">
+                                        <option value="USD" {% if settings.currency == 'USD' %}selected{% endif %}>USD</option>
+                                        <option value="EUR" {% if settings.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                                        <option value="GBP" {% if settings.currency == 'GBP' %}selected{% endif %}>GBP</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enable_refunds" 
+                                               name="enable_refunds" {% if settings.enable_refunds %}checked{% endif %}>
+                                        <label class="form-check-label" for="enable_refunds">Enable Refunds</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="refund_window_days" class="form-label">Refund Window (Days)</label>
+                                    <input type="number" class="form-control" id="refund_window_days" 
+                                           name="refund_window_days" value="{{ settings.refund_window_days }}" 
+                                           min="0" required>
+                                    <div class="form-text">Number of days after registration when refunds are allowed</div>
+                                </div>
+                                <button type="submit" class="btn btn-warning">Save Payment Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <a href="{{ url_for('competitions') }}" class="btn btn-primary">
+                <i class="fas fa-trophy me-2"></i>View Competitions
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

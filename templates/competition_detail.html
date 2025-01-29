@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    {% if competition.banner %}
+    <div class="competition-banner mb-4">
+        <img src="{{ url_for('static', filename='uploads/banners/' + competition.banner) }}" 
+             class="img-fluid rounded" 
+             alt="{{ competition.name }}">
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Competition Info -->
+        <div class="col-md-8">
+            <div class="card bg-dark mb-4">
+                <div class="card-body">
+                    <h1 class="text-light mb-4">{{ competition.name }}</h1>
+                    
+                    <div class="competition-details text-light mb-4">
+                        <p class="mb-3">
+                            <i class="fas fa-calendar me-2"></i>
+                            {{ competition.date.strftime('%B %d, %Y') }}
+                        </p>
+                        <p class="mb-3">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            {{ competition.city }}
+                        </p>
+                        <p class="mb-3">
+                            <i class="fas fa-star me-2"></i>
+                            Level: {{ competition.level }}
+                        </p>
+                        <p class="mb-3">
+                            <i class="fas fa-music me-2"></i>
+                            Music: {% if competition.music_genre == 'modern' %}
+                                    Modern Bachata
+                                  {% elif competition.music_genre == 'traditional' %}
+                                    Traditional Bachata
+                                  {% else %}
+                                    Modern & Traditional Bachata
+                                  {% endif %}
+                        </p>
+                        <p class="mb-3">
+                            <i class="fas fa-dollar-sign me-2"></i>
+                            Entry Fee: ${{ "%.2f"|format(competition.price) }}
+                        </p>
+                    </div>
+
+                    {% if competition.description %}
+                    <div class="mb-4">
+                        <h4 class="text-light mb-3">Description</h4>
+                        <p class="text-light">{{ competition.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Competition Status -->
+                    <div class="mb-4">
+                        <h4 class="text-light mb-3">Status</h4>
+                        <div class="d-flex align-items-center mb-3">
+                            {% if competition.status == 'upcoming' %}
+                                <span class="badge bg-primary me-2">Upcoming</span>
+                            {% elif competition.status == 'in_progress' %}
+                                <span class="badge bg-success me-2">In Progress</span>
+                            {% else %}
+                                <span class="badge bg-secondary me-2">Completed</span>
+                            {% endif %}
+
+                            {% if competition.registration_open %}
+                                <span class="badge bg-success">Registration Open</span>
+                            {% else %}
+                                <span class="badge bg-danger">Registration Closed</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Participant Stats -->
+                    <div class="mb-4">
+                        <h4 class="text-light mb-3">Participants</h4>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="card bg-primary mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-light">Leaders</h5>
+                                        <p class="card-text display-6 text-light mb-0">{{ competition.leader_count }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card bg-info mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-light">Followers</h5>
+                                        <p class="card-text display-6 text-light mb-0">{{ competition.follower_count }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Registration Card -->
+            {% if competition.status == 'upcoming' and competition.registration_open %}
+            <div class="card bg-dark mb-4">
+                <div class="card-body">
+                    <h4 class="text-light mb-3">Registration</h4>
+                    {% if current_user.is_authenticated %}
+                        {% if not user_registered %}
+                            {% if current_user.can_compete_in(competition.level) %}
+                            <form action="{{ url_for('register_competition', competition_id=competition.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-plus-circle me-2"></i>Register Now
+                                </button>
+                            </form>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                You are not eligible for this level. Required level: {{ competition.level }}
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="alert alert-success">
+                                You are registered for this competition!
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info">
+                            Please <a href="{{ url_for('login') }}" class="alert-link">login</a> to register.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Competition Progress -->
+            {% if competition.status == 'in_progress' %}
+            <div class="card bg-dark mb-4">
+                <div class="card-body">
+                    <h4 class="text-light mb-3">Current Round</h4>
+                    <div class="progress mb-3" style="height: 25px;">
+                        {% set progress = (competition.current_round / competition.max_rounds) * 100 %}
+                        <div class="progress-bar bg-success" 
+                             role="progressbar" 
+                             style="width: {{ progress }}%"
+                             aria-valuenow="{{ progress }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            Round {{ competition.current_round }} of {{ competition.max_rounds }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Admin Controls -->
+            {% if current_user.is_admin %}
+            <div class="card bg-dark mb-4">
+                <div class="card-body">
+                    <h4 class="text-light mb-3">Admin Controls</h4>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('manage_competition', competition_id=competition.id) }}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-cog me-2"></i>Manage Competition
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Judges -->
+            <div class="card bg-dark mb-4">
+                <div class="card-body">
+                    <h4 class="text-light mb-3">Judges</h4>
+                    {% if competition.judges %}
+                        <ul class="list-group list-group-flush">
+                        {% for judge in competition.judges %}
+                            <li class="list-group-item bg-dark text-light">
+                                <div class="d-flex align-items-center">
+                                    {% if judge.profile_picture %}
+                                    <img src="{{ judge.profile_picture_url }}" 
+                                         class="rounded-circle me-2" 
+                                         width="30" 
+                                         height="30"
+                                         alt="{{ judge.username }}">
+                                    {% endif %}
+                                    {{ judge.username }}
+                                    {% if competition.head_judge_id == judge.id %}
+                                        <span class="badge bg-warning ms-auto">Head Judge</span>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-light mb-0">No judges assigned yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.competition-banner {
+    height: 300px;
+    overflow: hidden;
+    border-radius: 0.5rem;
+}
+
+.competition-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.competition-details i {
+    width: 25px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12 col-xl-10 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>{{ competition.name }} - Results</h1>
+                <a href="{{ url_for('competition_info', competition_id=competition.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Competition
+                </a>
+            </div>
+
+            {% if not results %}
+                <div class="alert alert-info">
+                    No results available for this competition yet.
+                </div>
+            {% else %}
+                {% for round_result in results %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3>Round {{ round_result.round.round_number }}</h3>
+                        </div>
+                        <div class="card-body">
+                            {% if round_result.results %}
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Rank</th>
+                                                <th>Participant</th>
+                                                <th>Average Score</th>
+                                                <th>Individual Scores</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for result in round_result.results %}
+                                                <tr>
+                                                    <td>{{ loop.index }}</td>
+                                                    <td>{{ result.participant.user.first_name }} {{ result.participant.user.last_name }}</td>
+                                                    <td>{{ "%.2f"|format(result.average_score) }}</td>
+                                                    <td>
+                                                        {% for score in result.scores %}
+                                                            <span class="badge bg-secondary me-1">{{ "%.1f"|format(score.value) }}</span>
+                                                        {% endfor %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    No scores recorded for this round yet.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

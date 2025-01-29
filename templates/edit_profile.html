@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">
+            <div class="card bg-dark">
+                <div class="card-header bg-primary">
+                    <h3 class="mb-0 text-light">
                         <i class="fas fa-user-edit me-2"></i>Edit Profile
                     </h3>
                 </div>
@@ -22,79 +22,88 @@
                         {% endif %}
                     {% endwith %}
 
-                    <form method="POST">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="first_name" class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="first_name" name="first_name" 
-                                       value="{{ user.first_name }}" required>
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.csrf_token }}
+                        
+                        <div class="mb-4">
+                            <div class="profile-picture-container mx-auto" style="width: 150px; height: 150px; overflow: hidden; border-radius: 50%;">
+                                <img src="{{ current_user.profile_picture_url }}" 
+                                     alt="Profile Picture" 
+                                     id="profile-preview"
+                                     class="img-fluid w-100 h-100 object-fit-cover">
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="last_name" class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="last_name" name="last_name" 
-                                       value="{{ user.last_name }}" required>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="city" class="form-label">City</label>
-                                <input type="text" class="form-control" id="city" name="city" 
-                                       value="{{ user.city or '' }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="country" class="form-label">Country</label>
-                                <input type="text" class="form-control" id="country" name="country" 
-                                       value="{{ user.country or '' }}">
+                            <div class="text-center mt-3">
+                                <label for="profile_picture" class="btn btn-outline-light">
+                                    <i class="fas fa-camera me-2"></i>Change Photo
+                                </label>
+                                <input type="file" class="d-none" id="profile_picture" name="profile_picture" accept="image/*" onchange="previewImage(this)">
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="phone" class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" id="phone" name="phone" 
-                                       value="{{ user.phone or '' }}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.first_name.label(class="form-label text-secondary") }}
+                                    {{ form.first_name(class="form-control bg-dark text-light border-secondary") }}
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="level" class="form-label">Dance Level</label>
-                                <select class="form-select" id="level" name="level">
-                                    <option value="">Select your level</option>
-                                    {% for level in ['Newcomer', 'Novice', 'Intermediate', 'Advanced', 'AllStar'] %}
-                                        <option value="{{ level }}" 
-                                                {% if user.level == level %}selected{% endif %}>
-                                            {{ level }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.last_name.label(class="form-label text-secondary") }}
+                                    {{ form.last_name(class="form-control bg-dark text-light border-secondary") }}
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label d-block">Dance Role</label>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="dance_role" 
-                                       id="leader" value="leader" 
-                                       {% if user.dance_role == 'leader' %}checked{% endif %} required>
-                                <label class="form-check-label" for="leader">Leader</label>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.phone.label(class="form-label text-secondary") }}
+                                    {{ form.phone(class="form-control bg-dark text-light border-secondary") }}
+                                </div>
                             </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="dance_role" 
-                                       id="follower" value="follower" 
-                                       {% if user.dance_role == 'follower' %}checked{% endif %} required>
-                                <label class="form-check-label" for="follower">Follower</label>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.city.label(class="form-label text-secondary") }}
+                                    {{ form.city(class="form-control bg-dark text-light border-secondary") }}
+                                </div>
                             </div>
                         </div>
 
-                        <hr class="my-4">
-
-                        <div class="mb-3">
-                            <label for="new_password" class="form-label">New Password (leave blank to keep current)</label>
-                            <input type="password" class="form-control" id="new_password" name="new_password">
-                            <div class="form-text">Only fill this if you want to change your password</div>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.level.label(class="form-label text-secondary") }}
+                                    {{ form.level(class="form-select bg-dark text-light border-secondary") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.dance_role.label(class="form-label text-secondary") }}
+                                    {{ form.dance_role(class="form-select bg-dark text-light border-secondary") }}
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{{ url_for('profile') }}" class="btn btn-light me-md-2">Cancel</a>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    {{ form.instagram.label(class="form-label text-secondary") }}
+                                    {{ form.instagram(class="form-control bg-dark text-light border-secondary", placeholder="@username") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="form-group">
+                                {{ form.new_password.label(class="form-label text-secondary") }}
+                                {{ form.new_password(class="form-control bg-dark text-light border-secondary") }}
+                                <div class="form-text text-secondary">Leave empty to keep current password</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('profile') }}" class="btn btn-outline-light">Cancel</a>
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save me-2"></i>Save Changes
                             </button>
@@ -105,4 +114,16 @@
         </div>
     </div>
 </div>
+
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profile-preview').src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
 {% endblock %}

@@ -4,8 +4,8 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Manage Competitions</h1>
-        <a href="{{ url_for('admin_create_competition') }}" class="btn btn-success">
-            <i class="fas fa-plus me-2"></i>Create New Competition
+        <a href="{{ url_for('create_jack_and_jill') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> New Competition
         </a>
     </div>
 
@@ -20,71 +20,86 @@
         {% endif %}
     {% endwith %}
 
-    <!-- List of Competitions -->
-    <div class="card shadow-sm">
-        <div class="card-body">
-            {% if competitions %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Date</th>
-                            <th>Location</th>
-                            <th>Dance Style</th>
-                            <th>Price</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for competition in competitions %}
-                        <tr>
-                            <td>{{ competition.name }}</td>
-                            <td>{{ competition.date.strftime('%B %d, %Y') }}</td>
-                            <td>{{ competition.city }}</td>
-                            <td>{{ competition.dance_style }}</td>
-                            <td>€{{ "%.2f"|format(competition.price) }}</td>
-                            <td>
-                                <span class="badge bg-{{ 'success' if competition.registration_open else 'danger' }}">
-                                    {{ 'Open' if competition.registration_open else 'Closed' }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="btn-group">
-                                    <a href="{{ url_for('admin_edit_competition', competition_id=competition.id) }}" 
-                                       class="btn btn-sm btn-primary" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{{ url_for('manage_competition_dancers', competition_id=competition.id) }}" 
-                                       class="btn btn-sm btn-info" title="Manage Dancers">
-                                        <i class="fas fa-users"></i>
-                                    </a>
-                                    <a href="{{ url_for('manage_competition_judges', competition_id=competition.id) }}" 
-                                       class="btn btn-sm btn-warning" title="Manage Judges">
-                                        <i class="fas fa-gavel"></i>
-                                    </a>
-                                    <form method="POST" action="{{ url_for('admin_toggle_registration', competition_id=competition.id) }}" 
-                                          style="display: inline;">
-                                        <button type="submit" class="btn btn-sm btn-{{ 'danger' if competition.registration_open else 'success' }}"
-                                                title="{{ 'Close' if competition.registration_open else 'Open' }} Registration">
-                                            <i class="fas fa-{{ 'lock' if competition.registration_open else 'lock-open' }}"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <div class="row">
+        {% if competitions %}
+            {% for competition in competitions %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    {% if competition.banner %}
+                    <img src="{{ url_for('static', filename='uploads/' + competition.banner) }}" 
+                         class="card-img-top" alt="{{ competition.name }}" style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ competition.name }}</h5>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                Date: {{ format_date(competition.date) }} |
+                                City: {{ competition.city }} |
+                                Price: ${{ "%.2f"|format(competition.price) }}
+                            </small>
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('admin_competition_settings', competition_id=competition.id) }}" class="btn btn-primary btn-sm">Settings</a>
+                                <form action="{{ url_for('admin_delete_competition', competition_id=competition.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this competition?')">Delete</button>
+                                </form>
+                            </div>
+                            <span class="badge {% if competition.status == 'upcoming' %}bg-primary
+                                             {% elif competition.status == 'ongoing' %}bg-success
+                                             {% else %}bg-secondary{% endif %}">
+                                {{ competition.status|title }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>No competitions found.
-                <a href="{{ url_for('admin_create_competition') }}" class="alert-link">Create your first competition</a>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>No competitions found. Create one to get started!
+                </div>
             </div>
-            {% endif %}
-        </div>
+        {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('date');
+    const dateError = document.getElementById('date-error');
+    const form = document.querySelector('form');
+
+    function validateDate() {
+        const selectedDate = new Date(dateInput.value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (selectedDate <= today) {
+            dateError.style.display = 'block';
+            dateInput.setCustomValidity('Competition date must be in the future');
+            return false;
+        } else {
+            dateError.style.display = 'none';
+            dateInput.setCustomValidity('');
+            return true;
+        }
+    }
+
+    dateInput.addEventListener('change', validateDate);
+    dateInput.addEventListener('input', validateDate);
+
+    form.addEventListener('submit', function(event) {
+        if (!validateDate()) {
+            event.preventDefault();
+        }
+    });
+
+    // Initial validation
+    validateDate();
+});
+</script>
 {% endblock %}

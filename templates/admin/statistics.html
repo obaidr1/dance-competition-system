@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>System Statistics</h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- User Statistics -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title h5 mb-0">
+                        <i class="fas fa-users me-2"></i>User Statistics
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Users
+                            <span class="badge bg-primary rounded-pill">{{ stats.total_users }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Leaders
+                            <span class="badge bg-info rounded-pill">{{ stats.total_leaders }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Followers
+                            <span class="badge bg-warning rounded-pill">{{ stats.total_followers }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Admins
+                            <span class="badge bg-danger rounded-pill">{{ stats.total_admins }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Competition Statistics -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title h5 mb-0">
+                        <i class="fas fa-trophy me-2"></i>Competition Statistics
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Competitions
+                            <span class="badge bg-success rounded-pill">{{ stats.total_competitions }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Active Competitions
+                            <span class="badge bg-success rounded-pill">{{ stats.active_competitions }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Completed Competitions
+                            <span class="badge bg-secondary rounded-pill">{{ stats.completed_competitions }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Registrations
+                            <span class="badge bg-info rounded-pill">{{ stats.total_registrations }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dance Style Distribution -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h3 class="card-title h5 mb-0">
+                        <i class="fas fa-music me-2"></i>Dance Style Distribution
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for style, count in stats.dance_styles.items() %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ style }}
+                            <span class="badge bg-info rounded-pill">{{ count }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Activity -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="card-title h5 mb-0">
+                        <i class="fas fa-chart-line me-2"></i>System Activity
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            New Users (Last 7 Days)
+                            <span class="badge bg-warning text-dark rounded-pill">{{ stats.new_users_week }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            New Registrations (Last 7 Days)
+                            <span class="badge bg-warning text-dark rounded-pill">{{ stats.new_registrations_week }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Upcoming Competitions
+                            <span class="badge bg-warning text-dark rounded-pill">{{ stats.upcoming_competitions }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
