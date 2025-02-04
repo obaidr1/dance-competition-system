@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bg-dark text-light">
+                <div class="card-header">
+                    <h2 class="card-title mb-0">Create Jack & Jill Competition</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ csrf_token }}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Competition Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="max_participants" class="form-label">Maximum Participants</label>
+                            <input type="number" class="form-control" id="max_participants" name="max_participants" 
+                                   min="2" step="2" placeholder="Leave empty for unlimited">
+                            <small class="text-muted">Must be an even number to ensure equal leaders and followers</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="num_rounds" class="form-label">Number of Rounds</label>
+                            <select class="form-select" id="num_rounds" name="num_rounds" required>
+                                <option value="1">1 Round</option>
+                                <option value="2">2 Rounds</option>
+                                <option value="3" selected>3 Rounds</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Create Competition
+                            </button>
+                            <a href="{{ url_for('jack_and_jill.list_competitions') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

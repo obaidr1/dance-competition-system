@@ -1,57 +1,50 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime, date, time, timedelta
+from flask_migrate import Migrate
+from forms import RegistrationForm
+from models import User, Competition, CompetitionJudge, CompetitionParticipant
+from extensions import db, login_manager
 import os
-import random
-import time
-from functools import wraps
-from flask_wtf import FlaskForm, CSRFProtect
-from forms import EditProfileForm, CreateCompetitionForm, JudgeAssignmentForm, StartRoundForm, AddDancerForm, AddAudienceMemberForm, RegistrationForm
+import secrets
 import json
-from models import (
-    db, User, Competition, CompetitionParticipant,
-    Round, Heat, HeatParticipant, Score
-)
+from functools import wraps
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-123')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///dance_competition.db')
-app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
-app.config['WTF_CSRF_ENABLED'] = True
-app.config['WTF_CSRF_SECRET_KEY'] = 'csrf-secret-key'
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production
-app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SECRET_KEY'] = 'your-secret-key'  # Change this!
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/djobi_devstation/CascadeProjects/dance-competition-system/dance_competition.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
 db.init_app(app)
-csrf = CSRFProtect()
-csrf.init_app(app)
-
-# Create upload directory if it doesn't exist
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
-
-login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'
 
-# Add custom filters to Jinja2 environment
+# Initialize migrations
+migrate = Migrate(app, db)
+
+@app.context_processor
+def inject_csrf_token():
+    if 'csrf_token' not in session:
+        session['csrf_token'] = secrets.token_hex(32)
+    return dict(csrf_token=session['csrf_token'])
+
 @app.template_filter('contains')
 def contains_filter(seq, item):
-    try:
-        return item in seq
-    except TypeError:
+    if seq is None:
         return False
+    return item in seq
 
 # Admin required decorator
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin:
-            flash('You need to be an admin to access this page.', 'error')
+        if not current_user.is_authenticated:
             return redirect(url_for('login'))
+        if not (current_user.is_admin or current_user.is_organizer):
+            flash('You do not have permission to access this page.', 'danger')
+            return redirect(url_for('dashboard'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -73,11 +66,13 @@ def login():
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
         
-        if user and check_password_hash(user.password, password):
+        if user and user.check_password(password):
             login_user(user)
-            return redirect(url_for('dashboard'))
+            flash('Logged in successfully!', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('dashboard'))
         else:
-            flash('Invalid email or password')
+            flash('Invalid email or password', 'danger')
     
     return render_template('login.html')
 
@@ -88,17 +83,23 @@ def register():
     
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(
-            email=form.email.data,
-            first_name=form.first_name.data,
-            last_name=form.last_name.data,
-            dance_role=form.dance_role.data,
-            level=form.level.data,
-            city=form.city.data,
-            is_dancer=form.user_role.data == 'dancer',
-            is_organizer=form.user_role.data == 'organizer',
-            is_judge=form.user_role.data == 'judge'
-        )
+        user = User()
+        user.email = form.email.data
+        user.first_name = form.first_name.data
+        user.last_name = form.last_name.data
+        user.dance_role = form.dance_role.data
+        user.level = form.level.data
+        user.city = form.city.data
+        
+        # Set role flags using protected attributes
+        user._dancer = form.user_role.data == 'dancer'
+        user._organizer = form.user_role.data == 'organizer'
+        user._judge = form.user_role.data == 'judge'
+        
+        # Make sure dancer flag is False for non-dancer roles
+        if user._organizer or user._judge:
+            user._dancer = False
+            
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
@@ -118,13 +119,11 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    user_role = current_user.get_role()
-    
-    if user_role == 'admin':
+    if current_user.is_admin:
         return redirect(url_for('admin_dashboard'))
-    elif user_role == 'organizer':
+    elif current_user.is_organizer:
         return redirect(url_for('organizer_dashboard'))
-    elif user_role == 'judge':
+    elif current_user.is_judge:
         return redirect(url_for('judge_dashboard'))
     else:
         return redirect(url_for('dancer_dashboard'))
@@ -132,12 +131,12 @@ def dashboard():
 @app.route('/organizer/dashboard')
 @login_required
 def organizer_dashboard():
-    if not current_user.is_organizer and not current_user.is_admin:
-        flash('Access denied. You must be an organizer to view this page.', 'danger')
+    if not current_user.is_organizer:
+        flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
-    competitions = current_user.get_assigned_competitions()
-    return render_template('organizer/dashboard.html', competitions=competitions)
+    # Get competitions organized by the current user
+    competitions = Competition.query.filter_by(organizer_id=current_user.id).all()
+    return render_template('organizer/dashboard.html', competitions=competitions, organizer=current_user)
 
 @app.route('/judge/dashboard')
 @login_required
@@ -152,6 +151,12 @@ def judge_dashboard():
 @app.route('/dancer/dashboard')
 @login_required
 def dancer_dashboard():
+    from pprint import pprint
+    print("Aktueller User:", current_user)
+    print("User-Klasse:", type(current_user))
+    print("Ist authentifiziert:", current_user.is_authenticated)
+    pprint(dir(current_user))
+    
     if not current_user.is_dancer:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
@@ -161,22 +166,28 @@ def dancer_dashboard():
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
-    if current_user.is_authenticated and current_user.is_admin:
-        return redirect(url_for('admin_dashboard'))
-        
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        
-        user = User.query.filter_by(email=email).first()
-        
-        if user and user.check_password(password) and user.is_admin:
-            login_user(user)
-            flash('Welcome back, Admin!', 'success')
+    if current_user.is_authenticated:
+        if current_user.is_admin:
             return redirect(url_for('admin_dashboard'))
         else:
-            flash('Invalid email or password', 'danger')
-    
+            flash('You do not have admin privileges.', 'error')
+            return redirect(url_for('index'))
+            
+    if request.method == 'POST':
+        if 'csrf_token' not in request.form:
+            flash('CSRF token missing', 'error')
+            return redirect(url_for('admin_login'))
+
+        user = User.query.filter_by(email=request.form['email']).first()
+        if user and user.check_password(request.form['password']):
+            if user.is_admin:
+                login_user(user)
+                return redirect(url_for('admin_dashboard'))
+            else:
+                flash('You do not have admin privileges.', 'error')
+        else:
+            flash('Invalid email or password.', 'error')
+            
     return render_template('admin/login.html')
 
 @app.route('/admin/dashboard')
@@ -197,34 +208,26 @@ def admin_users():
 @admin_required
 def admin_edit_user(user_id):
     user = User.query.get_or_404(user_id)
+    form = EditProfileForm(obj=user)
     
-    if request.method == 'POST':
-        user.email = request.form.get('email')
-        user.first_name = request.form.get('first_name')
-        user.last_name = request.form.get('last_name')
-        user.role = request.form.get('role')
-        user.level = request.form.get('level')
-        user.city = request.form.get('city')
-        user.country = request.form.get('country')
-        user.dance_role = request.form.get('dance_role')
+    if form.validate_on_submit():
+        user.email = form.email.data
+        user.first_name = form.first_name.data
+        user.last_name = form.last_name.data
+        user.phone = form.phone.data
+        user.city = form.city.data
+        user.dance_role = form.dance_role.data
+        user.level = form.level.data
+        user.role = form.role.data
         
-        # Only update password if provided
-        password = request.form.get('password')
-        if password:
-            user.password = generate_password_hash(password)
+        if form.new_password.data:
+            user.set_password(form.new_password.data)
             
-        # Update admin status based on role
-        user.is_admin = (request.form.get('role') == 'admin')
+        db.session.commit()
+        flash('User information updated successfully.', 'success')
+        return redirect(url_for('admin_users'))
         
-        try:
-            db.session.commit()
-            flash('User updated successfully', 'success')
-            return redirect(url_for('admin_users'))
-        except Exception as e:
-            db.session.rollback()
-            flash('Error updating user: ' + str(e), 'error')
-            
-    return render_template('admin/edit_user.html', user=user)
+    return render_template('admin/edit_user.html', user=user, form=form)
 
 @app.route('/admin/users/<int:user_id>/delete', methods=['POST'])
 @login_required
@@ -244,6 +247,22 @@ def admin_delete_user(user_id):
         flash('Error deleting user: ' + str(e), 'error')
     
     return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/<int:user_id>/reset-password', methods=['POST'])
+@login_required
+@admin_required
+def reset_user_password(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Generate a random temporary password
+    temp_password = ''.join(secrets.choice('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789') for _ in range(12))
+    
+    # Update user's password
+    user.set_password(temp_password)
+    db.session.commit()
+    
+    flash(f'Password has been reset. Temporary password: {temp_password}', 'success')
+    return redirect(url_for('admin_edit_user', user_id=user.id))
 
 @app.route('/admin/competitions')
 @login_required
@@ -274,11 +293,11 @@ def admin_statistics():
     # Calculate total registrations using CompetitionParticipant
     total_registrations = CompetitionParticipant.query.count()
 
-    # Get dance style distribution
-    dance_styles = {}
+    # Get competition type distribution
+    competition_types = {}
     for comp in Competition.query.all():
-        if comp.dance_style:
-            dance_styles[comp.dance_style] = dance_styles.get(comp.dance_style, 0) + 1
+        if comp.competition_type:
+            competition_types[comp.competition_type] = competition_types.get(comp.competition_type, 0) + 1
 
     # Calculate recent activity
     one_week_ago = datetime.now() - timedelta(days=7)
@@ -288,7 +307,7 @@ def admin_statistics():
 
     # Count new registrations in the last week using CompetitionParticipant
     new_registrations_week = CompetitionParticipant.query.filter(
-        CompetitionParticipant.registration_time >= one_week_ago
+        CompetitionParticipant.registered_at >= one_week_ago
     ).count()
 
     upcoming_competitions = Competition.query.filter(
@@ -304,7 +323,7 @@ def admin_statistics():
         'active_competitions': active_competitions,
         'completed_competitions': completed_competitions,
         'total_registrations': total_registrations,
-        'dance_styles': dance_styles,
+        'competition_types': competition_types,
         'new_users_week': new_users_week,
         'new_registrations_week': new_registrations_week,
         'upcoming_competitions': upcoming_competitions
@@ -379,7 +398,7 @@ def admin_settings_update():
     
     return redirect(url_for('admin_settings'))
 
-@app.route('/admin/admin_create_competition', methods=['GET', 'POST'])
+@app.route('/admin/create-competition', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def admin_create_competition():
@@ -389,6 +408,7 @@ def admin_create_competition():
             name = request.form['name']
             date_str = request.form['date']
             city = request.form['city']
+            dance_style = request.form['dance_style']
             price = float(request.form['price'])
             description = request.form.get('description', '')
             max_participants = request.form.get('max_participants')
@@ -410,6 +430,7 @@ def admin_create_competition():
                 name=name,
                 date=date,
                 city=city,
+                dance_style=dance_style,
                 price=price,
                 description=description,
                 status='upcoming',
@@ -418,7 +439,8 @@ def admin_create_competition():
                 max_participants=int(max_participants) if max_participants else None,
                 max_rounds=max_rounds,
                 rotation_size=rotation_size,
-                pairs_per_final=pairs_per_final
+                pairs_per_final=pairs_per_final,
+                organizer_id=current_user.id  # Add the current user as the organizer
             )
             competition.set_scoring_dimensions(scoring_dimensions)
             
@@ -495,6 +517,10 @@ def add_dancer_to_competition(competition_id):
         return redirect(url_for('manage_dancers', competition_id=competition_id))
     
     form = AddDancerForm()
+    if not form.csrf_token.validate(form):
+        flash('CSRF token is missing or invalid', 'danger')
+        return redirect(url_for('manage_dancers', competition_id=competition_id))
+    
     # Get available dancers for form validation
     available_dancers = User.query.filter(
         ~User.id.in_(
@@ -542,7 +568,9 @@ def add_dancer_to_competition(competition_id):
         
         flash('Dancer added successfully', 'success')
     else:
-        flash('Invalid form submission', 'danger')
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{getattr(form, field).label.text}: {error}', 'danger')
     
     return redirect(url_for('manage_dancers', competition_id=competition_id))
 
@@ -606,8 +634,6 @@ def add_audience_member(competition_id):
 @admin_required
 def toggle_participant_status(participant_id):
     participant = CompetitionParticipant.query.get_or_404(participant_id)
-    if participant.competition.participant_list_locked:
-        return jsonify({'success': False, 'message': 'Participant list is locked'})
     
     try:
         participant.is_active = not participant.is_active
@@ -615,30 +641,22 @@ def toggle_participant_status(participant_id):
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)})
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/participant/<int:participant_id>/remove', methods=['POST'])
 @login_required
 @admin_required
 def remove_participant(participant_id):
     participant = CompetitionParticipant.query.get_or_404(participant_id)
-    if participant.competition.participant_list_locked:
-        return jsonify({'success': False, 'message': 'Participant list is locked'})
+    competition_id = participant.competition_id
     
     try:
-        # If audience member, delete the temporary user too
-        if participant.is_audience_fill:
-            user = participant.user
-            db.session.delete(participant)
-            db.session.delete(user)
-        else:
-            db.session.delete(participant)
-        
+        db.session.delete(participant)
         db.session.commit()
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)})
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/competition/<int:competition_id>/lock-participants', methods=['POST'])
 @login_required
@@ -652,7 +670,7 @@ def lock_participant_list(competition_id):
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)})
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/competition/<int:competition_id>/unlock-participants', methods=['POST'])
 @login_required
@@ -666,7 +684,7 @@ def unlock_participant_list(competition_id):
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)})
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/admin/competitions/<int:competition_id>/judges')
 @login_required
@@ -783,8 +801,9 @@ def admin_edit_competition(competition_id):
                 banner = request.files['banner']
                 if banner and banner.filename and allowed_file(banner.filename):
                     filename = secure_filename(banner.filename)
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    banner.save(file_path)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{timestamp}_{filename}"
+                    banner.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     competition.banner = filename
             
             # Update competition details
@@ -922,9 +941,10 @@ def admin_delete_competition(competition_id):
 def admin_competition_settings(competition_id):
     competition = Competition.query.get_or_404(competition_id)
     # Get all users who are judges but not already assigned to this competition
+    assigned_judge_ids = [ja.judge_id for ja in competition.judge_assignments]
     available_judges = User.query.filter(
         User.is_judge == True,
-        ~User.id.in_([j.id for j in competition.judges])
+        ~User.id.in_(assigned_judge_ids)
     ).all()
     return render_template('admin/competition_settings.html', 
                          competition=competition,
@@ -1002,10 +1022,10 @@ def admin_update_head_judge(competition_id):
     competition = Competition.query.get_or_404(competition_id)
     
     try:
-        head_judge_id = request.form.get('head_judge')
+        judge_id = request.form.get('judge_id')
         
-        if head_judge_id:
-            head_judge = User.query.get(head_judge_id)
+        if judge_id:
+            head_judge = User.query.get(judge_id)
             if head_judge and head_judge in competition.judges:
                 competition.head_judge_id = head_judge.id
                 db.session.commit()
@@ -1255,7 +1275,7 @@ def register_competition(competition_id):
 @admin_required
 def manage_competition(competition_id):
     competition = Competition.query.get_or_404(competition_id)
-    judge_form = AssignJudgeForm()
+    judge_form = JudgeAssignmentForm()
     start_round_form = StartRoundForm()
     
     # Populate judge choices
@@ -1278,7 +1298,7 @@ def manage_competition(competition_id):
 @admin_required
 def assign_judge(competition_id):
     competition = Competition.query.get_or_404(competition_id)
-    form = AssignJudgeForm()
+    form = JudgeAssignmentForm()
     
     if form.validate_on_submit():
         judge = User.query.get(form.judges.data)
@@ -1388,6 +1408,110 @@ def create_heats(competition_id, round_id):
     flash(f'Successfully created {total_heats} heats!', 'success')
     return redirect(url_for('manage_competition', competition_id=competition_id))
 
+@app.route('/join_competition/<int:competition_id>', methods=['POST'])
+@login_required
+def join_competition(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    participant = CompetitionParticipant(
+        competition_id=competition.id,
+        user_id=current_user.id,
+        is_active=True
+    )
+    db.session.add(participant)
+    db.session.commit()
+    flash('You have successfully joined the competition!', 'success')
+    return redirect(url_for('competition_detail', competition_id=competition.id))
+
+@app.route('/organizer/create-competition', methods=['GET', 'POST'])
+@login_required
+def organizer_create_competition():
+    if not current_user.is_organizer and not current_user.is_admin:
+        flash('You do not have permission to create competitions.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        try:
+            # Debug: Print all form data
+            print("Form data received:", request.form)
+            print("Files received:", request.files)
+            
+            name = request.form.get('name')
+            date_str = request.form.get('date')
+            city = request.form.get('city')
+            max_participants = request.form.get('max_participants')
+            price = request.form.get('price')
+            description = request.form.get('description')
+            dance_style = request.form.get('dance_style')
+            level = request.form.get('level')  # Get level from form
+            max_rounds = int(request.form.get('max_rounds', 3))
+            rotation_size = int(request.form.get('rotation_size', 2))
+            pairs_per_final = int(request.form.get('pairs_per_final', 5))
+            
+            # Debug: Print processed data
+            print("Processed data:", {
+                'name': name,
+                'date': date_str,
+                'city': city,
+                'price': price,
+                'description': description,
+                'max_participants': max_participants,
+                'max_rounds': max_rounds,
+                'rotation_size': rotation_size,
+                'pairs_per_final': pairs_per_final,
+                'dance_style': dance_style,
+                'level': level  # Add level to debug output
+            })
+            
+            # Convert date string to datetime object
+            competition_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            
+            # Validate required fields
+            if not dance_style:
+                flash('Dance style is required', 'danger')
+                return redirect(url_for('organizer_create_competition'))
+                
+            competition = Competition(
+                name=name,
+                date=competition_date,
+                city=city,
+                max_participants=int(max_participants) if max_participants else None,
+                price=float(price),
+                description=description,
+                dance_style=dance_style,
+                level=level,  # Add level to competition
+                competition_type='jack_and_jill',
+                max_rounds=max_rounds,
+                rotation_size=rotation_size,
+                pairs_per_final=pairs_per_final,
+                organizer_id=current_user.id,
+                status='upcoming',
+                registration_open=True,
+                scoring_dimensions=''
+            )
+            
+            # Handle banner upload
+            if 'banner' in request.files:
+                banner = request.files['banner']
+                if banner and banner.filename and allowed_file(banner.filename):
+                    filename = secure_filename(banner.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{timestamp}_{filename}"
+                    banner.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    competition.banner = filename
+
+            db.session.add(competition)
+            db.session.commit()
+            
+            flash('Competition created successfully!', 'success')
+            return redirect(url_for('organizer_dashboard'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating competition: {str(e)}', 'danger')
+            print("Error details:", str(e))  # Debug: Print error details
+            return redirect(url_for('organizer_create_competition'))
+        
+    return render_template('organizer/create_competition.html')
+
 def send_judge_credentials_email(email, password, competition):
     # TODO: Implement email sending
     print(f"Would send credentials to {email} for competition {competition.name}")
@@ -1412,6 +1536,10 @@ def allowed_file(filename):
 def create_jack_and_jill():
     if request.method == 'POST':
         try:
+            # Debug: Print all form data
+            print("Form data received:", request.form)
+            print("Files received:", request.files)
+            
             name = request.form['name']
             date_str = request.form['date']
             city = request.form['city']
@@ -1422,8 +1550,22 @@ def create_jack_and_jill():
             rotation_size = int(request.form['rotation_size'])
             pairs_per_final = int(request.form['pairs_per_final'])
             scoring_dimensions = request.form.getlist('scoring_dimensions')
-            competition_type = request.form['competition_type']
-            level = request.form['level']
+            dance_style = request.form['dance_style']
+            
+            # Debug: Print processed data
+            print("Processed data:", {
+                'name': name,
+                'date': date_str,
+                'city': city,
+                'price': price,
+                'description': description,
+                'max_participants': max_participants,
+                'max_rounds': max_rounds,
+                'rotation_size': rotation_size,
+                'pairs_per_final': pairs_per_final,
+                'scoring_dimensions': scoring_dimensions,
+                'dance_style': dance_style
+            })
             
             # Convert date string to date object
             date = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -1441,13 +1583,14 @@ def create_jack_and_jill():
                 price=price,
                 description=description,
                 status='upcoming',
-                competition_type=competition_type,
-                level=level,
+                dance_style=dance_style,
+                competition_type='jack_and_jill',
                 registration_open=True,
                 max_participants=int(max_participants) if max_participants else None,
                 max_rounds=max_rounds,
                 rotation_size=rotation_size,
-                pairs_per_final=pairs_per_final
+                pairs_per_final=pairs_per_final,
+                organizer_id=current_user.id  # Add the current user as the organizer
             )
             competition.set_scoring_dimensions(scoring_dimensions)
             
@@ -1467,6 +1610,7 @@ def create_jack_and_jill():
         except Exception as e:
             db.session.rollback()
             flash(f'Error creating competition: {str(e)}', 'danger')
+            print("Error details:", str(e))  # Debug: Print error details
             return redirect(url_for('create_jack_and_jill'))
     
     return render_template('admin/create_jack_and_jill.html')
@@ -1504,24 +1648,64 @@ def utility_processor():
 
 if __name__ == '__main__':
     with app.app_context():
+        # Drop and recreate all tables
+        db.drop_all()
         db.create_all()
-        
-        # Create admin user if it doesn't exist
-        admin_email = 'admin@example.com'
-        if not User.query.filter_by(email=admin_email).first():
-            admin = User(
-                email=admin_email,
-                first_name='Admin',
-                last_name='User',
-                is_admin=True,
-                is_judge=True,
-                dance_role='admin',
-                level='advanced',  # Set default level for admin
-                created_at=datetime.now()
-            )
-            admin.set_password('admin')
+
+        try:
+            # Create test admin account
+            admin = User()
+            admin.email = "admin@example.com"
+            admin.first_name = "Admin"
+            admin.last_name = "User"
+            admin.dance_role = "leader"
+            admin.level = "advanced"
+            admin._admin = True
+            admin._organizer = True
+            admin.set_password("admin123")
             db.session.add(admin)
+
+            # Create test organizer
+            organizer = User()
+            organizer.email = "organizer@example.com"
+            organizer.first_name = "Test"
+            organizer.last_name = "Organizer"
+            organizer.dance_role = "leader"
+            organizer.level = "advanced"
+            organizer._organizer = True
+            organizer._dancer = False
+            organizer.set_password("organizer123")
+            db.session.add(organizer)
+
+            # Create test judge
+            judge = User()
+            judge.email = "judge@example.com"
+            judge.first_name = "Test"
+            judge.last_name = "Judge"
+            judge.dance_role = "leader"
+            judge.level = "advanced"
+            judge._judge = True
+            judge._dancer = False
+            judge.set_password("judge123")
+            db.session.add(judge)
+
+            # Create test dancer
+            dancer = User()
+            dancer.email = "dancer@example.com"
+            dancer.first_name = "Test"
+            dancer.last_name = "Dancer"
+            dancer.dance_role = "follower"
+            dancer.level = "intermediate"
+            dancer._dancer = True
+            dancer.set_password("dancer123")
+            db.session.add(dancer)
+
             db.session.commit()
-            print('Admin user created successfully!')
-            
-    app.run(debug=True, port=5005)
+            print("Test accounts created successfully")
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error creating test accounts: {str(e)}")
+            raise
+
+    app.run(debug=True, port=5019)

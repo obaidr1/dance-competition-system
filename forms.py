@@ -11,7 +11,8 @@ class EditProfileForm(FlaskForm):
     phone = StringField('Phone')
     city = StringField('City')
     dance_role = SelectField('Dance Role', choices=[('leader', 'Leader'), ('follower', 'Follower')])
-    level = SelectField('Level', choices=[('Novice', 'Novice'), ('Intermediate', 'Intermediate'), ('Advanced', 'Advanced')])
+    level = SelectField('Level', choices=[('novice', 'Novice'), ('intermediate', 'Intermediate'), ('advanced', 'Advanced')])
+    role = SelectField('User Role', choices=[('dancer', 'Dancer'), ('judge', 'Judge'), ('admin', 'Admin')])
     instagram = StringField('Instagram')
     profile_picture = FileField('Profile Picture')
     new_password = PasswordField('New Password')
@@ -40,7 +41,8 @@ class RegistrationForm(FlaskForm):
                           validators=[DataRequired()])
     
     def validate_email(self, field):
-        if User.query.filter_by(email=field.data).first():
+        user = User.query.filter_by(email=field.data).first()
+        if user is not None:
             raise ValidationError('Email already registered.')
 
 class CreateCompetitionForm(FlaskForm):

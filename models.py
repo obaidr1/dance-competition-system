@@ -1,224 +1,175 @@
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-import json
-from flask import url_for
-from dateutil import parser
-
-db = SQLAlchemy()
+from datetime import datetime
+from extensions import db
 
 # Association tables for many-to-many relationships
 user_competitions = db.Table('user_competitions',
-    db.Column('competition_id', db.Integer, db.ForeignKey('competition.id'), primary_key=True),
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
-)
-
-competition_judges = db.Table('competition_judges',
-    db.Column('competition_id', db.Integer, db.ForeignKey('competition.id'), primary_key=True),
-    db.Column('judge_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    db.Column('competition_id', db.Integer, db.ForeignKey('competitions.id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True)
 )
 
 class User(UserMixin, db.Model):
+    """User model for authentication and role management"""
+    __tablename__ = 'users'
+    
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    first_name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(50), nullable=False)
-    dance_role = db.Column(db.String(20), nullable=False)  # leader/follower
-    level = db.Column(db.String(20), nullable=False)
+    password_hash = db.Column(db.String(200))
+    first_name = db.Column(db.String(50))
+    last_name = db.Column(db.String(50))
     city = db.Column(db.String(100))
-    profile_picture = db.Column(db.String(200))
-    instagram = db.Column(db.String(50))
-    
-    # User roles
-    is_admin = db.Column(db.Boolean, default=False)
-    is_organizer = db.Column(db.Boolean, default=False)
-    is_judge = db.Column(db.Boolean, default=False)
-    is_dancer = db.Column(db.Boolean, default=True)  # Default role
-    is_temporary = db.Column(db.Boolean, default=False)
-    
-    # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_login = db.Column(db.DateTime)
-    
-    # Email preferences
-    email_notifications = db.Column(db.Boolean, default=True)
-    
-    # Relationships
-    competitions_organized = db.relationship('Competition', 
-                                          foreign_keys='Competition.organizer_id',
-                                          lazy=True)
-    judge_assignments = db.relationship('JudgeAssignment',
-                                     foreign_keys='JudgeAssignment.judge_id',
-                                     lazy=True)
-    participations = db.relationship('CompetitionParticipant',
-                                  foreign_keys='CompetitionParticipant.user_id',
-                                  lazy=True)
-    scores_given = db.relationship('Score', 
-                               foreign_keys='Score.judge_id',
-                               lazy=True)
+    dance_role = db.Column(db.String(20))
+    level = db.Column(db.String(20))
+    _admin = db.Column('is_admin', db.Boolean, default=False, nullable=False)
+    _organizer = db.Column('is_organizer', db.Boolean, default=False, nullable=False)
+    _judge = db.Column('is_judge', db.Boolean, default=False, nullable=False)
+    _dancer = db.Column('is_dancer', db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    # Beziehungen
+    participations = db.relationship('CompetitionParticipant', back_populates='participant')
+    judging = db.relationship('CompetitionJudge', back_populates='judge')
+    organized_competitions = db.relationship('Competition', backref='organizer')
+
+    @property
+    def is_admin(self):
+        return self._admin
+
+    @is_admin.setter
+    def is_admin(self, value):
+        self._admin = value
+
+    @property
+    def is_organizer(self):
+        return self._organizer
+
+    @is_organizer.setter
+    def is_organizer(self, value):
+        self._organizer = value
+
+    @property
+    def is_judge(self):
+        return self._judge
+
+    @is_judge.setter
+    def is_judge(self, value):
+        self._judge = value
+
+    @property
+    def is_dancer(self):
+        return self._dancer
+
+    @is_dancer.setter
+    def is_dancer(self, value):
+        self._dancer = value
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def get_assigned_competitions(self):
+        """Get competitions based on user role"""
+        if self.is_organizer:
+            # For organizers, return competitions they created
+            return Competition.query.filter_by(organizer_id=self.id).all()
+        elif self.is_judge:
+            # For judges, return competitions they are assigned to judge
+            judge_assignments = CompetitionJudge.query.filter_by(user_id=self.id).all()
+            return [assignment.competition for assignment in judge_assignments]
+        elif self.is_dancer:
+            # For dancers, return competitions they are participating in
+            participations = CompetitionParticipant.query.filter_by(user_id=self.id).all()
+            return [participation.competition for participation in participations]
+        else:
+            return []
 
     def __repr__(self):
         return f'<User {self.email}>'
-    
-    def set_password(self, password):
-        self.password = generate_password_hash(password)
-        
-    def check_password(self, password):
-        return check_password_hash(self.password, password)
-    
-    def get_role(self):
-        if self.is_admin:
-            return 'admin'
-        elif self.is_organizer:
-            return 'organizer'
-        elif self.is_judge:
-            return 'judge'
-        else:
-            return 'dancer'
-            
-    def can_create_competition(self):
-        return self.is_admin or self.is_organizer
-    
-    def can_manage_competition(self, competition):
-        return (self.is_admin or 
-                self.is_organizer and competition.organizer_id == self.id)
-    
-    def can_judge_competition(self, competition):
-        return (self.is_judge and 
-                JudgeAssignment.query.filter_by(
-                    judge_id=self.id,
-                    competition_id=competition.id,
-                    is_active=True
-                ).first() is not None)
-    
-    def get_assigned_competitions(self):
-        if self.is_judge:
-            return (Competition.query
-                   .join(JudgeAssignment)
-                   .filter(JudgeAssignment.judge_id == self.id,
-                          JudgeAssignment.is_active == True)
-                   .all())
-        elif self.is_organizer:
-            return Competition.query.filter_by(organizer_id=self.id).all()
-        else:
-            return (Competition.query
-                   .join(CompetitionParticipant)
-                   .filter(CompetitionParticipant.user_id == self.id,
-                          CompetitionParticipant.is_active == True)
-                   .all())
 
-class JudgeAssignment(db.Model):
+class Competition(db.Model):
+    __tablename__ = 'competitions'
+    
     id = db.Column(db.Integer, primary_key=True)
-    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
-    judge_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    assigned_at = db.Column(db.DateTime, default=datetime.utcnow)
-    is_active = db.Column(db.Boolean, default=True)
+    name = db.Column(db.String(100), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    location = db.Column(db.String(200))
+    description = db.Column(db.Text)
+    registration_open = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    organizer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Relationships
+    organizer = db.relationship('User', foreign_keys=[organizer_id], backref='organized_competitions')
+    judges = db.relationship('CompetitionJudge', 
+                           back_populates='competition',
+                           cascade='all, delete-orphan',
+                           overlaps="judge_assignments")
+    judge_assignments = db.relationship('CompetitionJudge',
+                                      overlaps="judges",
+                                      viewonly=True)
+    participants = db.relationship('CompetitionParticipant', 
+                                 back_populates='competition',
+                                 cascade='all, delete-orphan')
+    rounds = db.relationship('Round', 
+                           back_populates='competition',
+                           cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f'<Competition {self.name}>'
+
+class CompetitionJudge(db.Model):
+    __tablename__ = 'competition_judges'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competitions.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     is_head_judge = db.Column(db.Boolean, default=False)
     
     # Relationships
     competition = db.relationship('Competition', 
-                              foreign_keys=[competition_id],
-                              lazy=True)
-    judge = db.relationship('User', 
-                              foreign_keys=[judge_id],
-                              lazy=True)
-    
-    __table_args__ = (
-        db.UniqueConstraint('competition_id', 'judge_id', name='unique_judge_assignment'),
-    )
-
-class Competition(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    date = db.Column(db.Date, nullable=False)
-    city = db.Column(db.String(100), nullable=False)
-    level = db.Column(db.String(20), nullable=False)
-    max_participants = db.Column(db.Integer)
-    leader_count = db.Column(db.Integer, default=0)
-    follower_count = db.Column(db.Integer, default=0)
-    
-    # Competition status
-    registration_open = db.Column(db.Boolean, default=True)
-    is_started = db.Column(db.Boolean, default=False)
-    is_completed = db.Column(db.Boolean, default=False)
-    current_round = db.Column(db.Integer, default=0)
-    
-    # Organizer
-    organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    organizer = db.relationship('User', foreign_keys=[organizer_id], lazy=True)
-    participants = db.relationship('CompetitionParticipant', lazy=True)
-    rounds = db.relationship('Round', lazy=True)
-    judge_assignments = db.relationship('JudgeAssignment', lazy=True)
+                                back_populates='judges',
+                                overlaps="judge_assignments")
+    judge = db.relationship('User', back_populates='judging')
+    scores = db.relationship('Score', 
+                           back_populates='judge',
+                           cascade='all, delete-orphan')
 
     def __repr__(self):
-        return f'<Competition {self.name}>'
-    
-    def can_start(self):
-        """Check if competition can be started"""
-        return (not self.is_started and 
-                not self.is_completed and 
-                self.date == datetime.today().date() and
-                len(self.judges) > 0)
-    
-    def start_competition(self):
-        """Start the competition"""
-        if not self.can_start():
-            return False, "Competition cannot be started"
-        
-        self.is_started = True
-        self.current_round = 1
-        self.registration_open = False
-        db.session.commit()
-        return True, "Competition started successfully"
-    
-    def complete_competition(self):
-        """Complete the competition"""
-        if not self.is_started:
-            return False, "Competition has not been started"
-        
-        self.is_completed = True
-        self.is_started = False
-        db.session.commit()
-        return True, "Competition completed successfully"
+        return f'<CompetitionJudge competition_id={self.competition_id} user_id={self.user_id}>'
 
 class CompetitionParticipant(db.Model):
+    __tablename__ = 'competition_participants'
+    
     id = db.Column(db.Integer, primary_key=True)
-    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competitions.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     dancer_number = db.Column(db.Integer)
     is_active = db.Column(db.Boolean, default=True)
     registered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     
     # Relationships
-    competition = db.relationship('Competition', foreign_keys=[competition_id], lazy=True)
-    user = db.relationship('User', foreign_keys=[user_id], lazy=True)
-    scores = db.relationship('Score', lazy=True)
-    heat_participations = db.relationship('HeatParticipant', 
-                                        foreign_keys='HeatParticipant.participant_id',
-                                        lazy=True)
-    partner_participations = db.relationship('HeatParticipant',
-                                           foreign_keys='HeatParticipant.partner_id',
-                                           lazy=True)
+    competition = db.relationship('Competition', back_populates='participants')
+    participant = db.relationship('User', back_populates='participations')
+    heat_participants = db.relationship('HeatParticipant', back_populates='participant', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<CompetitionParticipant {self.user.first_name} {self.user.last_name}>'
 
 class Round(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competitions.id'), nullable=False)
     round_number = db.Column(db.Integer, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
-    competition = db.relationship('Competition', foreign_keys=[competition_id], lazy=True)
-    scores = db.relationship('Score', lazy=True)
-    heats = db.relationship('Heat', lazy=True)
+    competition = db.relationship('Competition', foreign_keys=[competition_id], back_populates='rounds', lazy=True)
+    scores = db.relationship('Score', back_populates='round', lazy=True)
+    heats = db.relationship('Heat', back_populates='round', lazy=True)
 
     def __repr__(self):
         return f'<Round {self.round_number} of Competition {self.competition_id}>'
@@ -231,8 +182,8 @@ class Heat(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
-    round = db.relationship('Round', foreign_keys=[round_id], lazy=True)
-    participants = db.relationship('HeatParticipant', lazy=True)
+    round = db.relationship('Round', foreign_keys=[round_id], back_populates='heats', lazy=True)
+    participants = db.relationship('HeatParticipant', back_populates='heat', lazy=True)
 
     def __repr__(self):
         return f'<Heat {self.heat_number} of Round {self.round_id}>'
@@ -244,9 +195,9 @@ class HeatParticipant(db.Model):
     partner_id = db.Column(db.Integer, db.ForeignKey('competition_participant.id'), nullable=True)
     
     # Relationships
-    heat = db.relationship('Heat', foreign_keys=[heat_id], lazy=True)
-    participant = db.relationship('CompetitionParticipant', foreign_keys=[participant_id], lazy=True)
-    partner = db.relationship('CompetitionParticipant', foreign_keys=[partner_id], lazy=True)
+    heat = db.relationship('Heat', foreign_keys=[heat_id], back_populates='participants', lazy=True)
+    participant = db.relationship('CompetitionParticipant', foreign_keys=[participant_id], back_populates='heat_participants', lazy=True)
+    partner = db.relationship('CompetitionParticipant', foreign_keys=[partner_id], back_populates='partner_participations', lazy=True)
 
     def __repr__(self):
         return f'<HeatParticipant {self.participant_id} in Heat {self.heat_id}>'
@@ -254,7 +205,7 @@ class HeatParticipant(db.Model):
 class Score(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     round_id = db.Column(db.Integer, db.ForeignKey('round.id'), nullable=False)
-    judge_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    judge_id = db.Column(db.Integer, db.ForeignKey('competition_judges.id'), nullable=False)
     participant_id = db.Column(db.Integer, db.ForeignKey('competition_participant.id'), nullable=False)
     
     # Scores
@@ -269,9 +220,9 @@ class Score(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
-    round = db.relationship('Round', foreign_keys=[round_id], lazy=True)
-    judge = db.relationship('User', foreign_keys=[judge_id], lazy=True)
-    participant = db.relationship('CompetitionParticipant', foreign_keys=[participant_id], lazy=True)
+    round = db.relationship('Round', foreign_keys=[round_id], back_populates='scores', lazy=True)
+    judge = db.relationship('CompetitionJudge', foreign_keys=[judge_id], back_populates='scores', lazy=True)
+    participant = db.relationship('CompetitionParticipant', foreign_keys=[participant_id], back_populates='scores', lazy=True)
 
     __table_args__ = (
         db.UniqueConstraint('round_id', 'judge_id', 'participant_id', name='unique_score_per_judge'),

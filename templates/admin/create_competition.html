@@ -3,76 +3,154 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Create New Competition</h1>
+        <h1>Create Competition</h1>
         <a href="{{ url_for('admin_competitions') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left me-2"></i>Back to Competitions
         </a>
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('admin_create_competition') }}" enctype="multipart/form-data">
-                        {{ csrf_token() }}
-                        <div class="mb-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin_create_competition') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <!-- Basic Information -->
+                <div class="mb-4">
+                    <h3 class="card-title h5 mb-3">Basic Information</h3>
+                    <div class="row g-3">
+                        <div class="col-md-6">
                             <label for="name" class="form-label">Competition Name</label>
                             <input type="text" class="form-control" id="name" name="name" required>
                         </div>
-
-                        <div class="mb-3">
+                        <div class="col-md-6">
                             <label for="date" class="form-label">Date</label>
                             <input type="date" class="form-control" id="date" name="date" required>
+                            <div class="form-text text-danger" id="date-error" style="display: none;">
+                                Competition date cannot be in the past
+                            </div>
                         </div>
-
-                        <div class="mb-3">
+                        <div class="col-md-6">
                             <label for="city" class="form-label">City</label>
                             <input type="text" class="form-control" id="city" name="city" required>
                         </div>
-
-                        <div class="mb-3">
+                        <div class="col-md-6">
                             <label for="dance_style" class="form-label">Dance Style</label>
                             <select class="form-select" id="dance_style" name="dance_style" required>
-                                <option value="">Select a dance style</option>
-                                <option value="Ballroom">Ballroom</option>
-                                <option value="Latin">Latin</option>
-                                <option value="Hip Hop">Hip Hop</option>
-                                <option value="Contemporary">Contemporary</option>
-                                <option value="Jazz">Jazz</option>
-                                <option value="Ballet">Ballet</option>
+                                <option value="">Select Dance Style</option>
+                                <option value="bachata">Bachata</option>
+                                <option value="salsa">Salsa</option>
+                                <option value="zouk">Zouk</option>
+                                <option value="west coast swing">West Coast Swing</option>
+                                <option value="other">Other</option>
                             </select>
                         </div>
-
-                        <div class="mb-3">
+                        <div class="col-md-6">
                             <label for="price" class="form-label">Entry Fee (€)</label>
-                            <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" required>
+                            <div class="input-group">
+                                <span class="input-group-text">€</span>
+                                <input type="number" class="form-control" id="price" name="price" 
+                                       min="0" step="0.01" required>
+                            </div>
                         </div>
-
-                        <div class="mb-3">
+                        <div class="col-12">
                             <label for="description" class="form-label">Description</label>
                             <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                         </div>
-
-                        <div class="mb-3">
-                            <label for="banner" class="form-label">Competition Banner</label>
+                        <div class="col-12">
+                            <label for="banner" class="form-label">Banner Image</label>
                             <input type="file" class="form-control" id="banner" name="banner" accept="image/*">
-                            <div class="form-text">Optional: Upload a banner image for the competition</div>
                         </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-plus me-2"></i>Create Competition
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Competition Structure -->
+                <div class="mb-4">
+                    <h3 class="card-title h5 mb-3">Competition Structure</h3>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="max_rounds" class="form-label">Maximum Rounds</label>
+                            <select class="form-select" id="max_rounds" name="max_rounds" required>
+                                <option value="1">1 Round (Finals Only)</option>
+                                <option value="2">2 Rounds (Semi + Finals)</option>
+                                <option value="3" selected>3 Rounds (Prelim + Semi + Finals)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="rotation_size" class="form-label">
+                                Follower Rotation Steps
+                                <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
+                                   title="In each dance, followers will move this many positions to find their next partner. For example, with 2 steps, if a follower dances with Leader 1, they will move to Leader 3 for their next dance, creating a more mixed rotation pattern."></i>
+                            </label>
+                            <select class="form-select" id="rotation_size" name="rotation_size" required>
+                                <option value="2" selected>2 Steps (Recommended)</option>
+                                <option value="3">3 Steps</option>
+                                <option value="4">4 Steps</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="pairs_per_final" class="form-label">Pairs Dancing in Finals</label>
+                            <select class="form-select" id="pairs_per_final" name="pairs_per_final" required>
+                                <option value="1">1 Pair</option>
+                                <option value="2">2 Pairs</option>
+                                <option value="3">3 Pairs</option>
+                                <option value="4">4 Pairs</option>
+                                <option value="5" selected>5 Pairs</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Competition
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <script>
-// Set minimum date to today
-document.getElementById('date').min = new Date().toISOString().split('T')[0];
+function validateDate() {
+    const dateInput = document.getElementById('date');
+    const dateError = document.getElementById('date-error');
+    const selectedDate = new Date(dateInput.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+        dateError.style.display = 'block';
+        return false;
+    } else {
+        dateError.style.display = 'none';
+        return true;
+    }
+}
+
+const dateInput = document.getElementById('date');
+const form = document.querySelector('form');
+
+dateInput.addEventListener('change', validateDate);
+form.addEventListener('submit', function(e) {
+    if (!validateDate()) {
+        e.preventDefault();
+    }
+});
+
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+});
 </script>
 {% endblock %}

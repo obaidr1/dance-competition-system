@@ -24,7 +24,7 @@
         {% if competitions %}
             {% for competition in competitions %}
             <div class="col-md-6 mb-4">
-                <div class="card h-100 shadow-sm">
+                <div class="card bg-dark text-light h-100 shadow-sm">
                     {% if competition.banner %}
                     <img src="{{ url_for('static', filename='uploads/' + competition.banner) }}" 
                          class="card-img-top" alt="{{ competition.name }}" style="height: 200px; object-fit: cover;">
@@ -33,16 +33,24 @@
                         <h5 class="card-title">{{ competition.name }}</h5>
                         <p class="card-text">
                             <small class="text-muted">
-                                Date: {{ format_date(competition.date) }} |
-                                City: {{ competition.city }} |
-                                Price: ${{ "%.2f"|format(competition.price) }}
+                                <i class="fas fa-calendar me-2"></i>Date: {{ format_date(competition.date) }}<br>
+                                <i class="fas fa-map-marker-alt me-2"></i>City: {{ competition.city }}<br>
+                                <i class="fas fa-dollar-sign me-2"></i>Price: ${{ "%.2f"|format(competition.price) }}
                             </small>
                         </p>
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="btn-group" role="group">
-                                <a href="{{ url_for('admin_competition_settings', competition_id=competition.id) }}" class="btn btn-primary btn-sm">Settings</a>
-                                <form action="{{ url_for('admin_delete_competition', competition_id=competition.id) }}" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this competition?')">Delete</button>
+                                <a href="{{ url_for('admin_competition_settings', competition_id=competition.id) }}" 
+                                   class="btn btn-primary btn-sm">
+                                   <i class="fas fa-cog me-1"></i>Settings
+                                </a>
+                                <form action="{{ url_for('admin_delete_competition', competition_id=competition.id) }}" 
+                                      method="POST" class="d-inline"
+                                      onsubmit="return confirm('Are you sure you want to delete this competition? This action cannot be undone.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </button>
                                 </form>
                             </div>
                             <span class="badge {% if competition.status == 'upcoming' %}bg-primary

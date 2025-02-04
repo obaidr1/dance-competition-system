@@ -22,8 +22,8 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <form method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <form method="POST" action="{{ url_for('create_jack_and_jill') }}" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
                 <!-- Basic Information -->
                 <div class="mb-4">
                     <h3 class="card-title h5 mb-3">Basic Information</h3>
@@ -44,8 +44,8 @@
                             <input type="text" class="form-control" id="city" name="city" required>
                         </div>
                         <div class="col-md-6">
-                            <label for="competition_type" class="form-label">Dance Style</label>
-                            <select class="form-select" id="competition_type" name="competition_type" required>
+                            <label for="dance_style" class="form-label">Dance Style</label>
+                            <select class="form-select" id="dance_style" name="dance_style" required>
                                 <option value="">Select Dance Style</option>
                                 <option value="bachata">Bachata</option>
                                 <option value="salsa">Salsa</option>

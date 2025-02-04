@@ -110,7 +110,7 @@
                         {% if not user_registered %}
                             {% if current_user.can_compete_in(competition.level) %}
                             <form action="{{ url_for('register_competition', competition_id=competition.id) }}" method="POST">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                 <button type="submit" class="btn btn-success w-100">
                                     <i class="fas fa-plus-circle me-2"></i>Register Now
                                 </button>

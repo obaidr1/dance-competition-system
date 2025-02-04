@@ -49,6 +49,7 @@
                                     <form method="POST" action="{{ url_for('remove_dancer_from_competition', competition_id=competition.id, dancer_id=dancer.id) }}" 
                                           style="display: inline;"
                                           onsubmit="return confirm('Are you sure you want to remove this dancer from the competition?');">
+                                        {{ csrf_token }}
                                         <button type="submit" class="btn btn-sm btn-danger">
                                             <i class="fas fa-user-minus"></i> Remove
                                         </button>
@@ -97,6 +98,7 @@
                                 <td>{{ dancer.user.email }}</td>
                                 <td>
                                     <form method="POST" action="{{ url_for('assign_dancer', competition_id=competition.id, dancer_id=dancer.id) }}" style="display: inline;">
+                                        {{ csrf_token }}
                                         <button type="submit" class="btn btn-sm btn-success">
                                             <i class="fas fa-plus"></i> Add
                                         </button>

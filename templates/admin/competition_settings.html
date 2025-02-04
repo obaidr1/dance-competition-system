@@ -38,6 +38,7 @@
                         </div>
                         <div class="card-body">
                             <form action="{{ url_for('update_competition_settings', competition_id=competition.id) }}" method="POST" enctype="multipart/form-data">
+                                {{ csrf_token }}
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="name" class="form-label">Competition Name</label>
@@ -120,6 +121,7 @@
                         </div>
                         <div class="card-body">
                             <form method="POST" action="{{ url_for('admin_update_competition_structure', competition_id=competition.id) }}">
+                                {{ csrf_token }}
                                 <div class="mb-3">
                                     <label for="max_rounds" class="form-label">Maximum Rounds</label>
                                     <input type="number" class="form-control" id="max_rounds" 
@@ -151,6 +153,7 @@
                         </div>
                         <div class="card-body">
                             <form method="POST" action="{{ url_for('admin_update_registration_settings', competition_id=competition.id) }}">
+                                {{ csrf_token }}
                                 <div class="mb-3">
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" id="registration_open" 
@@ -199,7 +202,8 @@
                                 </div>
                             </div>
                             <form method="POST" action="{{ url_for('admin_add_existing_judge_to_competition', competition_id=competition.id) }}" class="mb-3">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                {{ csrf_token }}
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                 <div class="input-group">
                                     <select class="form-select" name="judge_id" required>
                                         <option value="">Select Judge</option>
@@ -230,10 +234,11 @@
                             {% endif %}
                             
                             <form method="POST" action="{{ url_for('admin_update_head_judge', competition_id=competition.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                {{ csrf_token }}
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                 <div class="mb-3">
-                                    <label for="head_judge" class="form-label">Head Judge</label>
-                                    <select class="form-select" id="head_judge" name="head_judge">
+                                    <label for="judge_id" class="form-label">Head Judge</label>
+                                    <select class="form-select" id="judge_id" name="judge_id">
                                         <option value="">Select Head Judge</option>
                                         {% for judge in competition.judges %}
                                             <option value="{{ judge.id }}" {% if competition.head_judge_id == judge.id %}selected{% endif %}>
@@ -242,7 +247,7 @@
                                         {% endfor %}
                                     </select>
                                     <div class="form-text">
-                                        The head judge will oversee the competition and make final decisions in case of ties or disputes.
+                                        The head judge will oversee the competition and make final decisions.
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-primary">Update Head Judge</button>
